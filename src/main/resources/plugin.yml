@@ -1,0 +1,7 @@
+name: TowerDefense
+version: '${version}'
+main: me.redplayer_1.towerdefense.TowerDefense
+api-version: '1.20'
+prefix: TD
+load: STARTUP
+authors: [RedPlayer_1]
