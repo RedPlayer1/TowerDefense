@@ -37,6 +37,8 @@ tasks.withType(JavaCompile).configureEach {
     if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
         options.release.set(targetJavaVersion)
     }
+
+
 }
 
 processResources {
@@ -45,5 +47,12 @@ processResources {
     filteringCharset 'UTF-8'
     filesMatching('plugin.yml') {
         expand props
+    }
+}
+
+tasks.withType(Jar).configureEach {
+    String outputDir = findProperty("outputDir")
+    if (outputDir != null && outputDir != '') {
+        destinationDirectory = file(outputDir)k
     }
 }
