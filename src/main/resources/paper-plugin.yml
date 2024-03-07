@@ -5,3 +5,9 @@ api-version: '1.20'
 prefix: TD
 load: STARTUP
 authors: [RedPlayer_1]
+dependencies:
+  server:
+    PlotSquared:
+      load: BEFORE
+      required: true
+      join-classpath: true
