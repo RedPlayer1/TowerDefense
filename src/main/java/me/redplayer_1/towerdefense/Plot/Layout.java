@@ -18,8 +18,8 @@ public class Layout {
 
     // creates new layout & adds it as a template (enemies & level uninitialized)
     protected Layout(String name, Location startLoc, Direction[] path) {
-        this.startLoc = startLoc;
         this.path = path;
+        this.startLoc = startLoc;
         layouts.put(name, this);
     }
 

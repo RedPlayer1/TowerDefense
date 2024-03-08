@@ -1,14 +1,25 @@
 package me.redplayer_1.towerdefense.Command;
 
+import me.redplayer_1.towerdefense.Plot.LayoutEditor;
+import me.redplayer_1.towerdefense.Util.PlayerUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.List;
 
 public class LayoutCommand extends Command {
-    private static final List<String> ARGS = List.of("create", "edit", "save", "help");
+    private static final List<String> ARGS = List.of("create", "edit", "save", "list", "help");
+    private static final String HELP_MSG =
+            """
+            <white>/layout create</white> <gold><name></gold> <gray>- open/start editor</gray>
+            <white>/layout edit</white> <gold><name></gold> <gray>- open existing editor</gray>
+            <white>/layout save</white> <gray>- save open editor</gray>
+            <white>/layout list</white> <gray>- list all saved layout templates</gray>
+            <white>/layout help</white> <gray- show help page</gray>
+            """.stripIndent();
 
     public LayoutCommand() {
         super("layout");
@@ -16,7 +27,28 @@ public class LayoutCommand extends Command {
 
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, @NotNull String[] args) {
-        return false;
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("You must be a player to run this command.");
+            return true;
+        }
+        switch (args[0].toLowerCase()) {
+            case "create" -> new LayoutEditor(player);
+            case "edit" -> PlayerUtils.sendError(player, "Not Implemented");
+            case "save" -> {
+                LayoutEditor editor = LayoutEditor.getEditor(player);
+                if (editor != null) {
+                    if (args.length >= 2) {
+                        editor.save(args[1]);
+                    } else {
+                        PlayerUtils.sendError(player, "Not enough args");
+                    }
+                } else {
+                    PlayerUtils.sendError(player, "You don't have an open editor");
+                }
+            }
+            case "help" -> player.sendRichMessage(HELP_MSG);
+        }
+        return true;
     }
 
     @Override
