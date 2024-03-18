@@ -1,6 +1,8 @@
-package me.redplayer_1.towerdefense.Plot;
+package me.redplayer_1.towerdefense.Plot.Layout;
 
+import me.redplayer_1.towerdefense.Plot.Direction;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 
@@ -12,14 +14,16 @@ public class Layout {
     private static HashMap<String, Layout> layouts = new HashMap<>();
 
     private final Location startLoc;
+    private final Material[][][] blocks; // [y][z][x]
     private final Direction[] path;
     private LinkedList<Enemy> enemies;
     private int level;
 
     // creates new layout & adds it as a template (enemies & level uninitialized)
-    protected Layout(String name, Location startLoc, Direction[] path) {
-        this.path = path;
+    protected Layout(String name, Location startLoc, Material[][][] blocks, Direction[] path) {
         this.startLoc = startLoc;
+        this.blocks = blocks;
+        this.path = path;
         layouts.put(name, this);
     }
 
@@ -29,6 +33,7 @@ public class Layout {
         if (layout == null) throw new NoLayoutFoundException();
 
         startLoc = layout.startLoc;
+        blocks = layout.blocks;
         path = layout.path;
         enemies = new LinkedList<>();
         this.level = level;
@@ -52,6 +57,16 @@ public class Layout {
                 i--;
             }
         }
+    }
+
+    /**
+     * Place all the blocks for the plot in the world, using the bottomLeft coordinate and layout size to determine
+     * relative locations
+     *
+     * @param bottomLeft the bottom-left coordinate of the plot placement (-x, +z)
+     */
+    public void place(Location bottomLeft) {
+
     }
 
     public void serialize(ConfigurationSection section) {

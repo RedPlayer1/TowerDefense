@@ -1,8 +1,10 @@
 package me.redplayer_1.towerdefense;
 
-import me.redplayer_1.towerdefense.Plot.NotEnoughPlotSpaceException;
+import me.redplayer_1.towerdefense.Plot.Layout.NotEnoughPlotSpaceException;
+import me.redplayer_1.towerdefense.Util.PlayerUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -12,10 +14,15 @@ public class EventListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         // register new TDPlayer
+        Player p = event.getPlayer();
         try {
-            new TDPlayer(event.getPlayer(), true);
+            new TDPlayer(p, true);
         } catch (NotEnoughPlotSpaceException e) {
-            event.getPlayer().kick(Component.text("Not enough plot space!"));
+            if (!p.isOp()) {
+                p.kick(Component.text("Not enough plot space!"));
+            } else {
+                PlayerUtils.sendError(p, e.toString());
+            }
         }
     }
 

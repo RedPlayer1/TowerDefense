@@ -15,6 +15,7 @@ public final class TowerDefense extends JavaPlugin {
         Bukkit.getCommandMap().register("layout", new LayoutCommand());
 
         // Listeners
+        getServer().getPluginManager().registerEvents(new EventListener(), this);
     }
 
     @Override

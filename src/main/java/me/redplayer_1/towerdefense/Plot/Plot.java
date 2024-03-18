@@ -1,22 +1,45 @@
 package me.redplayer_1.towerdefense.Plot;
 
+import me.redplayer_1.towerdefense.Plot.Layout.Layout;
+import me.redplayer_1.towerdefense.Plot.Layout.NotEnoughPlotSpaceException;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 
+/**
+ * A square area (width & length = Layout.SIZE, y is undefined) consisting of a bottom layer of filler blocks, then
+ * the Layout design, then any Placeables (rather, their block representations).
+ * Plots are positioned in a grid and have a set of relative x, y coordinates. Operations like relocating the origin
+ * of such grid can be quite resource intensive, and, since they use 'for' loops, can momentarily freeze the server.
+ *
+ * @see Layout#SIZE
+ */
 public class Plot {
-    private static final int PLOT_GROUP_SIZE = 10;
-    private static final Plot[][] plots = new Plot[PLOT_GROUP_SIZE][PLOT_GROUP_SIZE];
+    private static int plotGridSize = 10;
+    private static final Material EMPTY_PLOT_FILLER_TYPE = Material.STONE_BRICKS; // TODO: make config value
+    private static final World PLOT_WORLD = Bukkit.getWorld("world"); //TODO: make config value
+    private static Plot[][] plots = new Plot[plotGridSize][plotGridSize]; // [y][x]
+    private static Location gridOrigin = null; // (0, 0) in relative coordinates
     private static int usedPlots = 0;
 
     private Layout layout;
     private int x;
     private int y;
 
-
     public Plot() throws NotEnoughPlotSpaceException {
-        if (usedPlots > PLOT_GROUP_SIZE * PLOT_GROUP_SIZE) throw new NotEnoughPlotSpaceException();
+        if (gridOrigin == null) {
+            throw new NotEnoughPlotSpaceException("Grid origin not initialized");
+        }
+        if (usedPlots > plotGridSize * plotGridSize) {
+            throw new NotEnoughPlotSpaceException();
+        }
 
-        for (int y = 0; y < PLOT_GROUP_SIZE; y++) {
-            for (int x = 0; x < PLOT_GROUP_SIZE; x++) {
+        // FIXME: alternate method? plots[usedPlots % plotGridSize**2][usedPlots - (usedPlots % plotGridSize**2)]
+        for (int y = 0; y < plotGridSize; y++) {
+            for (int x = 0; x < plotGridSize; x++) {
                 if (plots[y][x] != null) {
                     this.x = x;
                     this.y = y;
@@ -27,8 +50,70 @@ public class Plot {
         }
     }
 
-    public void clear() {
+    /**
+     * Creates a blank space that a plot can be put in later (only 1-y thick)
+     *
+     * @param bottomLeft the bottom left corner of the top of the plot space
+     */
+    private void placeBlankPlot(Location bottomLeft) {
+        final int y = bottomLeft.getBlockY();
+        final int maxZ = bottomLeft.getBlockZ() + Layout.SIZE;
+        final int maxX = bottomLeft.getBlockX() + Layout.SIZE;
+
+        for (int z = bottomLeft.getBlockZ(); z < maxZ; z++) {
+            for (int x = bottomLeft.getBlockX(); x < maxX; x++) {
+                bottomLeft.getWorld().getBlockAt(x, y, z).setType(EMPTY_PLOT_FILLER_TYPE);
+            }
+        }
+    }
+
+    /**
+     * Clears the plot from the grid, including all player towers
+     *
+     * @param clearBlocks if the blocks that represented the plot should be cleared (set to air)
+     */
+    public void clear(boolean clearBlocks) {
         plots[y][x] = null;
+        if (clearBlocks) {
+            // remove plot's bottom block layer
+            Location bottomLeft = getBottomLeft();
+            final int y = bottomLeft.getBlockY();
+
+            // FIXME: high order function, blockmesh, or normal for loop with repeated maxVal declarations (see placeBlankPlot)?
+            for (int z = bottomLeft.getBlockZ(); z <)
+        }
+    }
+
+    /**
+     * @return the uppermost y-level that is occupied by blocks of the plot/layout (add 1 for first valid air block)
+     */
+    public int getTopY() {
+        return gridOrigin.getBlockY() + 1; // allow layouts that are 1+ blocks thick?
+    }
+
+    /**
+     * @return the origin (0, 0) of the plot grid
+     */
+    public static Location getGridOrigin() {
+        return gridOrigin;
+    }
+
+    /**
+     * @return the bottom left coordinate of the plot
+     */
+    public Location getBottomLeft() {
+        return new Location(PLOT_WORLD, x * Layout.SIZE, gridOrigin.getBlockY(), y * Layout.SIZE);
+    }
+
+    /**
+     * Teleports the player to the bottom left corner of the plot
+     *
+     * @param player the player to teleport
+     */
+    public void teleportPlayer(Player player) {
+        Location loc = getBottomLeft();
+        loc.setY(getTopY() + 1);
+        player.teleport(loc);
     }
 
     /**
@@ -41,5 +126,47 @@ public class Plot {
     public static Plot deserialize(ConfigurationSection section) throws NotEnoughPlotSpaceException {
         Plot plot = new Plot();
         return plot;
+    }
+
+    public static void setPlotGridOrigin(Location origin) {
+        gridOrigin = origin;
+
+        // remove all player towers & plot/layout blocks
+
+        // place plot, layout, and towers
+    }
+
+    /**
+     * @return the size (length & width) of the plot grid
+     */
+    public static int getPlotGridSize() {
+        return plotGridSize;
+    }
+
+    /**
+     * Enlarges the current plot grid to a new and copies over the old plots.
+     *
+     * @param size the width and length of the new grid
+     */
+    public static void resizePlotGrid(int size) {
+        plotGridSize = size;
+        Plot[][] newPlots = new Plot[plotGridSize][plotGridSize];
+        for (int y = 0; y < plots.length; y++) {
+            for (int x = 0; x < plots.length; x++) {
+                newPlots[y][x] = plots[y][x];
+            }
+        }
+        plots = newPlots;
+    }
+
+    /**
+     * @return if the plot grid has a set origin (if plots can be created)
+     */
+    public static boolean isPlotSpaceInitialized() {
+        return gridOrigin != null;
+    }
+
+    public static int getUsedPlots() {
+        return usedPlots;
     }
 }

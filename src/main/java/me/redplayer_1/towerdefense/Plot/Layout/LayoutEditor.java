@@ -1,9 +1,11 @@
-package me.redplayer_1.towerdefense.Plot;
+package me.redplayer_1.towerdefense.Plot.Layout;
 
+import me.redplayer_1.towerdefense.Plot.Direction;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Directional;
 import org.bukkit.entity.BlockDisplay;
@@ -67,29 +69,33 @@ public class LayoutEditor {
      */
     public Layout save(String name) {
         if (startLoc == null) return null;
-        // TODO: save blocks
-        close();
-        return new Layout(name, startLoc, path.toArray(new Direction[0]));
+        return new Layout(name, startLoc, close(), path.toArray(new Direction[0]));
     }
 
     /**
      * Closes the editor. Editing player's inventory is restored and layout blocks are removed.
      * <b>Does not save the layout</b>
+     *
+     * @return the types of blocks that made up the layout (includes base) ordered by block coordinate
+     * as Material[y][z][x]
      */
-    public void close() {
+    public Material[][][] close() {
         // remove all blocks & nodes
+        Material[][][] blocks = new Material[2 /* y */][Layout.SIZE /* z */][Layout.SIZE /* x */];
         for (int y = bottomRight.getBlockY(); y <= topLeft.getBlockY(); y++) {
             for (int z = 0; z < Layout.SIZE; z++) {
                 for (int x = 0; x < Layout.SIZE; x++) {
-                    world.getBlockAt(x, y, z).setType(Material.AIR);
+                    Block b = world.getBlockAt(x, y, z);
+                    blocks[y][z][x] = b.getType();
+                    b.setType(Material.AIR);
                 }
             }
         }
-        for (int i = 0; i < placedNodes.size(); i++) {
-            placedNodes.get(i).remove();
-            i--;
+        for (Entity placedNode : placedNodes) {
+            placedNode.remove();
         }
         openEditors.remove(player);
+        return blocks;
     }
 
     /**
