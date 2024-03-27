@@ -1,7 +1,7 @@
 package me.redplayer_1.towerdefense.Command;
 
 import me.redplayer_1.towerdefense.Plot.Layout.LayoutEditor;
-import me.redplayer_1.towerdefense.Util.PlayerUtils;
+import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -36,17 +36,17 @@ public class LayoutCommand extends Command {
         }
         switch (args[0].toLowerCase()) {
             case "create" -> new LayoutEditor(player);
-            case "edit" -> PlayerUtils.sendError(player, "Not Implemented");
+            case "edit" -> MessageUtils.sendError(player, "Not Implemented");
             case "save" -> {
                 LayoutEditor editor = LayoutEditor.getEditor(player);
                 if (editor != null) {
                     if (args.length >= 2) {
                         editor.save(args[1]);
                     } else {
-                        PlayerUtils.sendError(player, "Not enough args");
+                        MessageUtils.sendError(player, "Not enough args");
                     }
                 } else {
-                    PlayerUtils.sendError(player, "You don't have an open editor");
+                    MessageUtils.sendError(player, "You don't have an open editor");
                 }
             }
             case "help" -> player.sendRichMessage(HELP_MSG);

@@ -2,6 +2,7 @@ package me.redplayer_1.towerdefense.Plot;
 
 import me.redplayer_1.towerdefense.Plot.Layout.Layout;
 import me.redplayer_1.towerdefense.Plot.Layout.NotEnoughPlotSpaceException;
+import me.redplayer_1.towerdefense.Util.BlockMesh;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -19,7 +20,10 @@ import org.bukkit.entity.Player;
  */
 public class Plot {
     private static int plotGridSize = 10;
-    private static final Material EMPTY_PLOT_FILLER_TYPE = Material.STONE_BRICKS; // TODO: make config value
+    private static final BlockMesh EMPTY_PLOT_MESH = new BlockMesh(Layout.SIZE, Layout.SIZE, 1);
+    static {
+        EMPTY_PLOT_MESH.fillMesh(Material.STONE_BRICKS); // TODO: make config value
+    }
     private static final World PLOT_WORLD = Bukkit.getWorld("world"); //TODO: make config value
     private static Plot[][] plots = new Plot[plotGridSize][plotGridSize]; // [y][x]
     private static Location gridOrigin = null; // (0, 0) in relative coordinates
@@ -56,15 +60,7 @@ public class Plot {
      * @param bottomLeft the bottom left corner of the top of the plot space
      */
     private void placeBlankPlot(Location bottomLeft) {
-        final int y = bottomLeft.getBlockY();
-        final int maxZ = bottomLeft.getBlockZ() + Layout.SIZE;
-        final int maxX = bottomLeft.getBlockX() + Layout.SIZE;
-
-        for (int z = bottomLeft.getBlockZ(); z < maxZ; z++) {
-            for (int x = bottomLeft.getBlockX(); x < maxX; x++) {
-                bottomLeft.getWorld().getBlockAt(x, y, z).setType(EMPTY_PLOT_FILLER_TYPE);
-            }
-        }
+        EMPTY_PLOT_MESH.place(bottomLeft);
     }
 
     /**
@@ -75,12 +71,8 @@ public class Plot {
     public void clear(boolean clearBlocks) {
         plots[y][x] = null;
         if (clearBlocks) {
-            // remove plot's bottom block layer
-            Location bottomLeft = getBottomLeft();
-            final int y = bottomLeft.getBlockY();
-
-            // FIXME: high order function, blockmesh, or normal for loop with repeated maxVal declarations (see placeBlankPlot)?
-            for (int z = bottomLeft.getBlockZ(); z <)
+            EMPTY_PLOT_MESH.setBottomLeft(getBottomLeft());
+            EMPTY_PLOT_MESH.destroy();
         }
     }
 
@@ -166,6 +158,9 @@ public class Plot {
         return gridOrigin != null;
     }
 
+    /**
+     * @return the number of plots that are currently in use
+     */
     public static int getUsedPlots() {
         return usedPlots;
     }

@@ -5,7 +5,7 @@ import org.bukkit.World;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * A 3-dimensional vector
+ * A 3-dimensional vector of integers
  */
 public class Vector3 {
     public int x;
@@ -27,20 +27,22 @@ public class Vector3 {
 
     /**
      * Adds the x, y, z coordinates to the Vector
+     * @return the same (modified) vector
      */
-    public void add(int x, int y, int z) {
+    public Vector3 add(int x, int y, int z) {
         this.x += x;
         this.y += y;
         this.z += z;
+        return this;
     }
 
     /**
      * Adds the Vector's coordinates to this Vector
-     *
      * @param vec the vector to add values from (not modified)
+     * @return the same (modified) vector
      */
-    public void add(Vector3 vec) {
-        add(vec.x, vec.y, vec.z);
+    public Vector3 add(Vector3 vec) {
+        return add(vec.x, vec.y, vec.z);
     }
 
     /**
@@ -63,5 +65,14 @@ public class Vector3 {
      */
     public Location toLocation(@Nullable World world) {
         return new Location(world, x, y, z);
+    }
+
+    /**
+     * Creates a vector representation of the location
+     * @param location the location to convert
+     * @return the vector representation of the location
+     */
+    public static Vector3 of(Location location) {
+        return new Vector3(location.getBlockX(), location.getBlockY(), location.getBlockZ());
     }
 }

@@ -1,10 +1,9 @@
 package me.redplayer_1.towerdefense.Plot.Layout;
 
 import me.redplayer_1.towerdefense.Plot.Direction;
+import me.redplayer_1.towerdefense.Util.BlockMesh;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.Entity;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -14,15 +13,15 @@ public class Layout {
     private static HashMap<String, Layout> layouts = new HashMap<>();
 
     private final Location startLoc;
-    private final Material[][][] blocks; // [y][z][x]
+    private final BlockMesh mesh;
     private final Direction[] path;
     private LinkedList<Enemy> enemies;
     private int level;
 
     // creates new layout & adds it as a template (enemies & level uninitialized)
-    protected Layout(String name, Location startLoc, Material[][][] blocks, Direction[] path) {
+    protected Layout(String name, Location startLoc, BlockMesh mesh, Direction[] path) {
         this.startLoc = startLoc;
-        this.blocks = blocks;
+        this.mesh = mesh;
         this.path = path;
         layouts.put(name, this);
     }
@@ -33,7 +32,7 @@ public class Layout {
         if (layout == null) throw new NoLayoutFoundException();
 
         startLoc = layout.startLoc;
-        blocks = layout.blocks;
+        mesh = layout.mesh;
         path = layout.path;
         enemies = new LinkedList<>();
         this.level = level;
@@ -66,7 +65,11 @@ public class Layout {
      * @param bottomLeft the bottom-left coordinate of the plot placement (-x, +z)
      */
     public void place(Location bottomLeft) {
+        mesh.place(bottomLeft);
+    }
 
+    public void remove() {
+        mesh.destroy();
     }
 
     public void serialize(ConfigurationSection section) {
@@ -78,13 +81,4 @@ public class Layout {
         return null;
     }
 
-    private static class Enemy {
-        public int pathIndex;
-        public Entity entity;
-
-        public Enemy(int pathIndex, Entity entity) {
-            this.pathIndex = pathIndex;
-            this.entity = entity;
-        }
-    }
 }

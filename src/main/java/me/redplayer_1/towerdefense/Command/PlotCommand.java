@@ -2,7 +2,7 @@ package me.redplayer_1.towerdefense.Command;
 
 import me.redplayer_1.towerdefense.Plot.Plot;
 import me.redplayer_1.towerdefense.TDPlayer;
-import me.redplayer_1.towerdefense.Util.PlayerUtils;
+import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -52,7 +52,7 @@ public class PlotCommand extends Command {
         if (args.length == 0) {
             TDPlayer tdPlayer = TDPlayer.of(player);
             if (tdPlayer == null) {
-                PlayerUtils.sendError(player, "You must have a plot to run this command!");
+                MessageUtils.sendError(player, "You must have a plot to run this command!");
                 return true;
             }
             tdPlayer.getPlot().teleportPlayer(player);
@@ -62,20 +62,20 @@ public class PlotCommand extends Command {
         if (isPrivileged(player)) {
             switch (args[0].toLowerCase()) {
                 case "help" -> player.sendRichMessage(PRIVILEGED_HELP_MSG);
-                case "manage" -> PlayerUtils.sendError(player, "not implemented"); //TODO
-                case "size" -> PlayerUtils.sendSuccess(player, String.valueOf(Plot.getPlotGridSize()));
+                case "manage" -> MessageUtils.sendError(player, "not implemented"); //TODO
+                case "size" -> MessageUtils.sendSuccess(player, String.valueOf(Plot.getPlotGridSize()));
                 case "resize" -> {
                     if (args.length < 2) {
-                        PlayerUtils.sendError(player, "Not enough args");
+                        MessageUtils.sendError(player, "Not enough args");
                     } else {
                         Plot.resizePlotGrid(Integer.parseInt(args[1]));
-                        PlayerUtils.sendSuccess(player, "Plot grid size is now " + args[1]);
+                        MessageUtils.sendSuccess(player, "Plot grid size is now " + args[1]);
                     }
                 }
-                case "origin" -> PlayerUtils.sendSuccess(player, Plot.getGridOrigin().toString());
+                case "origin" -> MessageUtils.sendSuccess(player, Plot.getGridOrigin().toString());
                 case "setorigin" -> {
                     if (args.length < 4) {
-                        PlayerUtils.sendError(player, "Not enough args");
+                        MessageUtils.sendError(player, "Not enough args");
                     } else {
                         try {
                             Location newOrigin = new Location(
@@ -85,9 +85,9 @@ public class PlotCommand extends Command {
                                     Integer.parseInt(args[3])
                             );
                             Plot.setPlotGridOrigin(newOrigin);
-                            PlayerUtils.sendSuccess(player, "New plot grid origin is " + newOrigin);
+                            MessageUtils.sendSuccess(player, "New plot grid origin is " + newOrigin);
                         } catch (NumberFormatException e) {
-                            PlayerUtils.sendError(player, "Origin x, y, and z must be integers");
+                            MessageUtils.sendError(player, "Origin x, y, and z must be integers");
                         }
                     }
                 }
@@ -100,12 +100,12 @@ public class PlotCommand extends Command {
         } else if (args.length > 1) {
             Player targetPlayer = Bukkit.getPlayer(args[1]);
             if (targetPlayer == null) {
-                PlayerUtils.sendError(player, "Cannot find player \"" + args[1] + "\"");
+                MessageUtils.sendError(player, "Cannot find player \"" + args[1] + "\"");
                 return true;
             }
             TDPlayer tdPlayer = TDPlayer.of(targetPlayer);
             if (tdPlayer == null) {
-                PlayerUtils.sendError(player, "Player \"" + args[1] + "\" doesn't have a plot");
+                MessageUtils.sendError(player, "Player \"" + args[1] + "\" doesn't have a plot");
             } else {
                 tdPlayer.getPlot().teleportPlayer(player);
             }

@@ -1,10 +1,14 @@
 package me.redplayer_1.towerdefense.Plot.Layout;
 
 import me.redplayer_1.towerdefense.Plot.Direction;
+import me.redplayer_1.towerdefense.TowerDefense;
+import me.redplayer_1.towerdefense.Util.BlockMesh;
+import me.redplayer_1.towerdefense.Util.ItemUtils;
+import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Directional;
@@ -14,8 +18,9 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -24,40 +29,91 @@ import java.util.LinkedList;
 public class LayoutEditor {
     private static final Material PLATFORM_BASE = Material.STONE_BRICKS;
     private static HashMap<Player, LayoutEditor> openEditors = new HashMap<>();
+    private static final NamespacedKey KEY = new NamespacedKey(TowerDefense.INSTANCE, "layoutitem");
+    private static final ItemStack[] toolInventory = new ItemStack[4];
+    static {
+        toolInventory[0] = ItemUtils.create("left", Material.STICK);
+        toolInventory[1] = ItemUtils.create("forward", Material.STICK);
+        toolInventory[2] = ItemUtils.create("right", Material.STICK);
+        toolInventory[3] = ItemUtils.create("delete", Material.REDSTONE_BLOCK);
+
+        for (int i = 0; i < toolInventory.length; i++) {
+            toolInventory[i].getItemMeta().getPersistentDataContainer().set(KEY, PersistentDataType.INTEGER, i);
+        }
+    }
 
     private final Player player;
-    private final World world;
+    private final ItemStack[] playerInventory;
+    private final BlockMesh bottomPlatform;
+    private final BlockMesh placementArea;
     private Location startLoc;
-
-    private final Location topLeft; // includes placeable zone
-    private final Location bottomRight;
+    private Location currentNodeLoc;
     private LinkedList<Direction> path;
     private LinkedList<Entity> placedNodes; // armor stand indicators that nodes have been placed
 
+    /**
+     * Create a layout at the player's location and put editing tools in their inventory
+     * @param player the player creating the layout
+     */
     public LayoutEditor(Player player) {
         this.player = player;
+        playerInventory = player.getInventory().getContents();
+        player.getInventory().setContents(toolInventory);
         path = new LinkedList<>();
 
         // create base platform
-        // assume player pos is center & facing north
-        int offset = (Layout.SIZE - 1) / 2;
-        world = player.getLocation().getWorld();
-        topLeft = player.getLocation().toBlockLocation().add(-offset, 0, -offset);
-        bottomRight = player.getLocation().toBlockLocation().add(offset, -1, offset);
+        bottomPlatform = new BlockMesh(Layout.SIZE, Layout.SIZE, 1);
+        bottomPlatform.fillMesh(Material.STONE_BRICKS);
+        // TODO: error handling if player isn't within build limits (-64 to 320 (overworld))
+        bottomPlatform.place(player.getLocation().subtract(0, 2, 0));
+        placementArea = new BlockMesh(Layout.SIZE, Layout.SIZE, 1);
+        placementArea.fillMesh(Material.GRASS_BLOCK);
+        placementArea.place(player.getLocation().subtract(0, 1, 0));
 
-        for (int y = bottomRight.getBlockY(); y <= topLeft.getBlockY(); y++) {
-            for (int z = 0; z < Layout.SIZE; z++) {
-                for (int x = 0; x < Layout.SIZE; x++) {
-                    world.getBlockAt(x, y, z).setType(y == bottomRight.getBlockY() ? PLATFORM_BASE : Material.AIR);
-                }
-            }
-        }
         openEditors.put(player, this);
     }
 
     public LayoutEditor(Player player, Layout template) {
         this(player);
         // TODO: load & place layout blocks & create node blockdisplays
+    }
+
+    /**
+     * Add a node to the layout
+     * @param direction the relative direction of the node (may only be west (left), east (right), or north (forward))
+     */
+    public void addNode(Direction direction) {
+        if (startLoc == null) throw new IllegalStateException("Cannot add a node without a start location");
+        if (!path.isEmpty()) {
+            Direction prevDir = path.peekLast();
+            direction = switch (direction) {
+                case NORTH -> prevDir;
+                case WEST -> prevDir.left();
+                case EAST -> prevDir.right();
+                default -> throw new IllegalStateException("Cannot add a node facing south");
+            };
+            currentNodeLoc = direction.getFromLocation(currentNodeLoc);
+        }
+        BlockDisplay node = (BlockDisplay) startLoc.getWorld().spawnEntity(
+                currentNodeLoc,
+                EntityType.BLOCK_DISPLAY
+        );
+        final Direction finalDirection = direction;
+        node.setBlock(Material.MAGENTA_GLAZED_TERRACOTTA.createBlockData(data -> {
+            // glazed magenta terracotta's arrow points opposite to block direction
+            BlockFace facing = switch (finalDirection) {
+                case NORTH -> BlockFace.SOUTH;
+                case SOUTH -> BlockFace.NORTH;
+                case EAST -> BlockFace.WEST;
+                case WEST -> BlockFace.EAST;
+            };
+            ((Directional) data).setFacing(facing);
+        }));
+        node.setGlowing(true);
+        node.setDisplayHeight(.3f);
+        node.setDisplayHeight(.3f);
+        placedNodes.add(node);
+        path.add(direction);
     }
 
     /**
@@ -76,37 +132,40 @@ public class LayoutEditor {
      * Closes the editor. Editing player's inventory is restored and layout blocks are removed.
      * <b>Does not save the layout</b>
      *
-     * @return the types of blocks that made up the layout (includes base) ordered by block coordinate
-     * as Material[y][z][x]
+     * @return the types of blocks that made up the layout
      */
-    public Material[][][] close() {
+    public BlockMesh close() {
         // remove all blocks & nodes
-        Material[][][] blocks = new Material[2 /* y */][Layout.SIZE /* z */][Layout.SIZE /* x */];
-        for (int y = bottomRight.getBlockY(); y <= topLeft.getBlockY(); y++) {
-            for (int z = 0; z < Layout.SIZE; z++) {
-                for (int x = 0; x < Layout.SIZE; x++) {
-                    Block b = world.getBlockAt(x, y, z);
-                    blocks[y][z][x] = b.getType();
-                    b.setType(Material.AIR);
-                }
-            }
-        }
         for (Entity placedNode : placedNodes) {
             placedNode.remove();
         }
         openEditors.remove(player);
-        return blocks;
+        bottomPlatform.destroy();
+        placementArea.capture(placementArea.getBottomLeft());
+        placementArea.destroy();
+        player.getInventory().setContents(playerInventory);
+        return placementArea;
     }
 
     /**
-     * @return if the location is within the editor's zone (platform & placeable)
+     * Sets the starting location for the layout. Existing nodes will be invalidated and cleared.
+     * @param startLoc the new start location
      */
-    public boolean isInEditorZone(Location loc) {
-        return
-                loc.getWorld() == world
-                        && loc.x() >= topLeft.x() && loc.x() <= bottomRight.x()
-                        && loc.y() <= topLeft.y() && loc.y() >= bottomRight.y()
-                        && loc.z() >= topLeft.z() && loc.z() <= bottomRight.z();
+    public void setStartLoc(Location startLoc) {
+        this.startLoc = startLoc;
+        currentNodeLoc = startLoc;
+        path.clear();
+        for (Entity node : placedNodes) {
+            node.remove();
+        }
+    }
+
+    public BlockMesh getBottomPlatform() {
+        return bottomPlatform;
+    }
+
+    public BlockMesh getPlacementArea() {
+        return placementArea;
     }
 
     /**
@@ -120,58 +179,55 @@ public class LayoutEditor {
     public static final class EventListener implements Listener {
         @EventHandler
         public void onInteract(PlayerInteractEvent event) {
-            if (event.getAction() != Action.RIGHT_CLICK_BLOCK
-                    || event.getClickedBlock() == null
-            ) return;
-
-            // player right clicks to place node & shift+right clicks to remove last node
+            if (!event.getAction().isRightClick()) return;
             Player p = event.getPlayer();
             LayoutEditor editor = openEditors.get(p);
+            if (editor == null) return;
+            ItemStack item = event.getItem();
+            Block block = event.getClickedBlock();
+            if (editor.path.isEmpty()) {
+                // no nodes placed, set starting node to clicked block
+                if (block == null) {
+                    MessageUtils.sendError(p, "Click on a block to set the starting position");
+                    return;
+                } else {
+                    Direction dir = switch (event.getPlayer().getFacing()) {
+                        case NORTH, NORTH_NORTH_EAST, NORTH_NORTH_WEST, NORTH_WEST, NORTH_EAST -> Direction.NORTH;
+                        case SOUTH, SOUTH_SOUTH_WEST, SOUTH_SOUTH_EAST, SOUTH_WEST, SOUTH_EAST -> Direction.SOUTH;
+                        case EAST, EAST_SOUTH_EAST, EAST_NORTH_EAST -> Direction.EAST;
+                        case WEST, WEST_SOUTH_WEST, WEST_NORTH_WEST -> Direction.WEST;
+                        case UP, DOWN, SELF -> null; // player facing will always be an ordinal direction
+                    };
+                    editor.setStartLoc(block.getLocation());
+                    editor.addNode(dir);
+                    MessageUtils.sendSuccess(p, "Set starting location");
+                    return;
+                }
+            }
 
-            if (p.isSneaking()) {
+            if (item == null || item.getType() == Material.AIR || !item.getItemMeta().getPersistentDataContainer().has(KEY)) {
+                MessageUtils.sendError(p, "Use the inventory tools to modify the layout");
+                return;
+            }
+            Direction dir = switch (item.getItemMeta().getPersistentDataContainer().get(KEY, PersistentDataType.INTEGER)) {
+                case 0 -> Direction.WEST;
+                case 1 -> Direction.NORTH;
+                case 2 -> Direction.EAST;
+                default -> null;
+            };
+            if (dir == null) {
+                // remove last node
                 if (editor.path.isEmpty()) {
-                    p.sendRichMessage("<dark_red>Err: No nodes have been placed.</dark_red>");
+                    MessageUtils.sendError(editor.player, "No nodes have been placed.");
                 } else {
                     editor.path.removeLast();
-                    p.sendRichMessage("<red>Removed last node.</red>");
+                    MessageUtils.sendSuccess(editor.player, "<red>Removed last node.</red>");
                 }
                 return;
             }
-
-            float yaw = p.getLocation().getYaw(); // 0-360 degrees
-            Direction direction;
-            if (yaw > 45 && yaw < 135) {
-                direction = Direction.EAST;
-            } else if (yaw <= 225 && yaw >= 135)
-                direction = Direction.SOUTH;
-            else if (yaw > 225 && yaw < 315) {
-                direction = Direction.WEST;
-            } else {
-                direction = Direction.NORTH;
-            }
-
+            editor.addNode(dir);
             p.playSound(p, Sound.BLOCK_NOTE_BLOCK_CHIME, 1, 1);
-            p.sendRichMessage("<green>Placed node facing " + direction.name().toLowerCase() + ".</green>");
-            editor.path.add(direction);
-            BlockDisplay node = (BlockDisplay) editor.world.spawnEntity(
-                    event.getClickedBlock().getLocation(),
-                    EntityType.BLOCK_DISPLAY
-            );
-            node.setBlock(Material.MAGENTA_GLAZED_TERRACOTTA.createBlockData(data -> {
-                // glazed magenta terracotta's arrow points opposite to block direction
-                BlockFace facing;
-                switch (direction) {
-                    case NORTH -> facing = BlockFace.SOUTH;
-                    case SOUTH -> facing = BlockFace.NORTH;
-                    case EAST -> facing = BlockFace.WEST;
-                    case WEST -> facing = BlockFace.EAST;
-                    default -> throw new IllegalStateException("Unexpected value: " + direction);
-                }
-                ((Directional) data).setFacing(facing);
-            }));
-            node.setGlowing(true);
-            node.setDisplayHeight(.3f);
-            node.setDisplayHeight(.3f);
+            MessageUtils.sendSuccess(p, "Placed node facing " + dir.name().toLowerCase() + ".");
         }
     }
 }

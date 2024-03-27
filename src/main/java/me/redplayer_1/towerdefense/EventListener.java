@@ -1,7 +1,7 @@
 package me.redplayer_1.towerdefense;
 
 import me.redplayer_1.towerdefense.Plot.Layout.NotEnoughPlotSpaceException;
-import me.redplayer_1.towerdefense.Util.PlayerUtils;
+import me.redplayer_1.towerdefense.Util.MessageUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -21,7 +21,7 @@ public class EventListener implements Listener {
             if (!p.isOp()) {
                 p.kick(Component.text("Not enough plot space!"));
             } else {
-                PlayerUtils.sendError(p, e.toString());
+                MessageUtils.sendError(p, e.toString());
             }
         }
     }

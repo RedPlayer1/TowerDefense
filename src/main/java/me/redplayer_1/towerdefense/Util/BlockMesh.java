@@ -19,13 +19,20 @@ import java.util.function.BiConsumer;
 public class BlockMesh {
     private static final String DATA_SEPARATOR = "::";
 
-    private final int width; // x
-    private final int depth; // z
-    private final int height; // y
+    public final int width; // x
+    public final int depth; // z
+    public final int height; // y
     private Material[][][] mesh; // [y][z][x]
     private @Nullable Location bottomLeft;
 
+    /**
+     * Creates a new BlockMesh. Width, height, and depth must be greater than 0
+     * @param width x-axis
+     * @param depth z-axis
+     * @param height y-axis
+     */
     public BlockMesh(int width, int depth, int height) {
+        assert width > 0 && depth > 0 && height > 0;
         this.width = width;
         this.depth = depth;
         this.height = height;
@@ -34,34 +41,48 @@ public class BlockMesh {
     }
 
     /**
+     * Copy constructor
+     * @param original the mesh to copy from
+     */
+    public BlockMesh(BlockMesh original) {
+        width = original.width;
+        depth = original.depth;
+        height = original.height;
+        mesh = original.mesh;
+        bottomLeft = original.bottomLeft;
+    }
+
+    /**
      * Checks if the mesh can be placed without replacing any non-air blocks
      * @param bottomLeft the bottom left corner of the area to check
      * @return if the mesh can be placed
      */
     public boolean canPlace(Location bottomLeft) {
-        Location prevBottomLeft = this.bottomLeft;
-        this.bottomLeft = bottomLeft;
         AtomicBoolean result = new AtomicBoolean(true);
-        forEachBlock((loc, rel) -> {
+        forEachBlock(bottomLeft, (loc, rel) -> {
             if (loc.getWorld().getType(loc) != Material.AIR) result.set(false);
         });
-        this.bottomLeft = prevBottomLeft;
         return result.get();
     }
 
+    /**
+     * Places the mesh in the world
+     * @param bottomLeft the location of the bottom left corner of the placement
+     */
     public void place(Location bottomLeft) {
         this.bottomLeft = bottomLeft;
-        forEachBlock((loc, rel) ->
+        forEachBlock(bottomLeft, (loc, rel) ->
                 loc.getWorld().setType(loc, mesh[rel.y][rel.z][rel.x])
         );
     }
 
     /**
-     * Sets all blocks within the mesh's area to Material.AIR
-     * (does not modify the stored Mesh)
+     * Sets all blocks within the mesh's area to air. Fails silently if the mesh isn't placed.
      */
     public void destroy() {
-        forEachBlock((loc, rel) -> loc.getWorld().setType(loc, Material.AIR));
+        if (bottomLeft != null) {
+            forEachBlock(bottomLeft, (loc, rel) -> loc.getWorld().setType(loc, Material.AIR));
+        }
     }
 
     /**
@@ -72,12 +93,22 @@ public class BlockMesh {
     }
 
     /**
+     * Sets the bottom left coordinate of the mesh. Changing this will alter where the {@link BlockMesh#destroy()}
+     * method occurs (a null value means that the mesh is not placed).
+     * @param bottomLeft
+     */
+    public void setBottomLeft(@Nullable Location bottomLeft) {
+        this.bottomLeft = bottomLeft;
+    }
+
+    /**
      * Runs the action for each block in the mesh. If bottomLeft is not set, the method fails silently.
      *
-     * @param action the action to perform which takes the world location and relative vector location in the mesh.
+     * @param bottomLeft the bottom-left corner of the region to loop over
+     * @param action the action to perform which takes the world location and relative vector location (xyz indices)
+     *               in the mesh.
      */
-    public void forEachBlock(BiConsumer<Location, Vector3> action) {
-        if (bottomLeft == null) return;
+    public void forEachBlock(Location bottomLeft, BiConsumer<Location, Vector3> action) {
         final int maxY = bottomLeft.getBlockY() + height - 1;
         final int maxZ = bottomLeft.getBlockZ() + depth - 1;
         final int maxX = bottomLeft.getBlockX() + width - 1;
@@ -89,6 +120,40 @@ public class BlockMesh {
                 }
             }
         }
+    }
+
+    /**
+     * Sets every block in the mesh to a material
+     * @param material the material to fill the mesh with
+     */
+    public void fillMesh(Material material) {
+        forEachBlock(
+                new Location(null, 0, 0, 0),
+                (loc, vec) -> mesh[vec.y][vec.z][vec.x] = material
+        );
+    }
+
+    /**
+     * Sets the mesh to the blocks in an area of the same size.
+     * @param bottomLeft the bottom-left corner of the capture location
+     */
+    public void capture(Location bottomLeft) {
+        forEachBlock(bottomLeft, (loc, vec) -> mesh[vec.y][vec.z][vec.x] = loc.getBlock().getType());
+    }
+
+    /**
+     * Checks if the location is within the mesh's placement.
+     * @param location the location to check
+     * @return if the location is in the mesh's placement (false if mesh isn't placed)
+     */
+    public boolean contains(Location location) {
+        if (bottomLeft == null) return false;
+        Vector3 tr = Vector3.of(bottomLeft).add(width, height, depth - 1);
+        Vector3 bl = Vector3.of(bottomLeft);
+        return location.getWorld() == bottomLeft.getWorld()
+                && location.x() >= bl.x && location.x() <= tr.x
+                && location.y() >= bl.y && location.y() <= tr.y
+                && location.z() >= bl.z && location.z() <= tr.z;
     }
 
     /**
