@@ -2,28 +2,31 @@ package me.redplayer_1.towerdefense.Util;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.entity.Player;
+import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.Nullable;
 
 public final class MessageUtils {
     private static final MiniMessage MMSG = MiniMessage.miniMessage();
+
     /**
-     * Sends a success message to the player.
-     *
-     * @param player  the player to send the message to
-     * @param message the result of the successful operation (recommended to close all MiniMessage tags)
+     * Creates a help entry string (with MiniMessage components)
+     * @param root the root command (ex. /command fixedArgument)
+     * @param args root command arguments (surround with <>)
+     * @param description a description of what the command does
+     * @return the created help entry string
      */
-    public static void sendSuccess(Player player, String message) {
-        player.sendRichMessage("<dark_green>✓</dark_green> <green>" + message + "</green>");
+    public static String helpEntry(String root, @Nullable String args, String description) {
+        return "<white>" + root + "</white>" + (args == null? "" : " <gold>" + args + "</gold>") + " <gray>- " + description + "</gray>";
     }
 
     /**
-     * Sends an error message to the player.
-     *
-     * @param player the player to send the message to
-     * @param reason the reason for the error (recommended to close all MiniMessage tags)
+     * Logs a message to the player
+     * @param target the target that the message will be logged to
+     * @param msg the message to send
+     * @param level the log level of the message
      */
-    public static void sendError(Player player, String reason) {
-        player.sendRichMessage("<dark_red>Error: " + reason + "</dark_red>");
+    public static void log(CommandSender target, String msg, LogLevel level) {
+        target.sendRichMessage(level.format(msg));
     }
 
     public static Component asMiniMessage(String text) {

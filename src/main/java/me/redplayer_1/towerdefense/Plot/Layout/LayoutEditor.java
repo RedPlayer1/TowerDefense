@@ -4,6 +4,7 @@ import me.redplayer_1.towerdefense.Plot.Direction;
 import me.redplayer_1.towerdefense.TowerDefense;
 import me.redplayer_1.towerdefense.Util.BlockMesh;
 import me.redplayer_1.towerdefense.Util.ItemUtils;
+import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -188,8 +189,7 @@ public class LayoutEditor {
             if (editor.path.isEmpty()) {
                 // no nodes placed, set starting node to clicked block
                 if (block == null) {
-                    MessageUtils.sendError(p, "Click on a block to set the starting position");
-                    return;
+                    MessageUtils.log(p, "Click on a block to set the starting position", LogLevel.ERROR);
                 } else {
                     Direction dir = switch (event.getPlayer().getFacing()) {
                         case NORTH, NORTH_NORTH_EAST, NORTH_NORTH_WEST, NORTH_WEST, NORTH_EAST -> Direction.NORTH;
@@ -200,13 +200,13 @@ public class LayoutEditor {
                     };
                     editor.setStartLoc(block.getLocation());
                     editor.addNode(dir);
-                    MessageUtils.sendSuccess(p, "Set starting location");
-                    return;
+                    MessageUtils.log(p, "Set starting location", LogLevel.SUCCESS);
                 }
+                return;
             }
 
             if (item == null || item.getType() == Material.AIR || !item.getItemMeta().getPersistentDataContainer().has(KEY)) {
-                MessageUtils.sendError(p, "Use the inventory tools to modify the layout");
+                MessageUtils.log(p, "Use the inventory tools to modify the layout", LogLevel.ERROR);
                 return;
             }
             Direction dir = switch (item.getItemMeta().getPersistentDataContainer().get(KEY, PersistentDataType.INTEGER)) {
@@ -218,16 +218,16 @@ public class LayoutEditor {
             if (dir == null) {
                 // remove last node
                 if (editor.path.isEmpty()) {
-                    MessageUtils.sendError(editor.player, "No nodes have been placed.");
+                    MessageUtils.log(editor.player, "No nodes have been placed.", LogLevel.ERROR);
                 } else {
                     editor.path.removeLast();
-                    MessageUtils.sendSuccess(editor.player, "<red>Removed last node.</red>");
+                    MessageUtils.log(editor.player, "<red>Removed last node.</red>", LogLevel.ERROR);
                 }
                 return;
             }
             editor.addNode(dir);
             p.playSound(p, Sound.BLOCK_NOTE_BLOCK_CHIME, 1, 1);
-            MessageUtils.sendSuccess(p, "Placed node facing " + dir.name().toLowerCase() + ".");
+            MessageUtils.log(p, "Placed node facing " + dir.name().toLowerCase() + ".", LogLevel.SUCCESS);
         }
     }
 }

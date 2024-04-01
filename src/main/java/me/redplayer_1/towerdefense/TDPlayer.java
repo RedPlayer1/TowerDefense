@@ -1,5 +1,6 @@
 package me.redplayer_1.towerdefense;
 
+import me.redplayer_1.towerdefense.Plot.Layout.NoLayoutFoundException;
 import me.redplayer_1.towerdefense.Plot.Layout.NotEnoughPlotSpaceException;
 import me.redplayer_1.towerdefense.Plot.Plot;
 import org.bukkit.Bukkit;
@@ -17,12 +18,13 @@ public class TDPlayer {
     private static final HashMap<Player, TDPlayer> players = new HashMap<>();
 
     private final Player player;
+    private boolean privileged = false;
     private Plot plot;
     private int money;
     private int prestige;
     private int multiplier;
 
-    public TDPlayer(Player player, boolean checkForExisting) throws NotEnoughPlotSpaceException {
+    public TDPlayer(Player player, boolean checkForExisting) throws NotEnoughPlotSpaceException, NoLayoutFoundException {
         this.player = player;
         boolean foundConfig = false;
 
@@ -47,11 +49,23 @@ public class TDPlayer {
             multiplier = 0;
             plot = new Plot();
         }
+        if (TDPlayer.isPrivileged(player)) {
+            privileged = true;
+        }
         players.put(player, this);
     }
 
     public Player getPlayer() {
         return player;
+    }
+
+    public boolean isPrivileged() {
+        return privileged;
+    }
+
+    public static boolean isPrivileged(Player p) {
+        // TODO: add config vals for privileged player perms/ranks
+        return p.isOp();
     }
 
     public Plot getPlot() {

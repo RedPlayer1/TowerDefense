@@ -1,6 +1,7 @@
 package me.redplayer_1.towerdefense.Command;
 
 import me.redplayer_1.towerdefense.Plot.Layout.LayoutEditor;
+import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -16,13 +17,11 @@ import java.util.List;
 public class LayoutCommand extends Command {
     private static final List<String> ARGS = List.of("create", "edit", "save", "list", "help");
     private static final String HELP_MSG =
-            """
-                    <white>/layout create</white> <gold><name></gold> <gray>- open/start editor</gray>
-                    <white>/layout edit</white> <gold><name></gold> <gray>- open existing editor</gray>
-                    <white>/layout save</white> <gray>- save open editor</gray>
-                    <white>/layout list</white> <gray>- list all saved layout templates</gray>
-                    <white>/layout help</white> <gray- show this help page</gray>
-                    """.trim();
+            MessageUtils.helpEntry("/layout create", "<name>", "open/start editor")
+            + MessageUtils.helpEntry("/layout edit", "<name>", "open existing layout")
+            + MessageUtils.helpEntry("/layout save", null, "save open editor and create a layout")
+            + MessageUtils.helpEntry("/layout list",  null, "list all saved layout templates")
+            + MessageUtils.helpEntry("/layout help", null, "show this help page");
 
     public LayoutCommand() {
         super("layout");
@@ -36,17 +35,17 @@ public class LayoutCommand extends Command {
         }
         switch (args[0].toLowerCase()) {
             case "create" -> new LayoutEditor(player);
-            case "edit" -> MessageUtils.sendError(player, "Not Implemented");
+            case "edit" -> MessageUtils.log(player, "Not Implemented", LogLevel.ERROR);
             case "save" -> {
                 LayoutEditor editor = LayoutEditor.getEditor(player);
                 if (editor != null) {
                     if (args.length >= 2) {
                         editor.save(args[1]);
                     } else {
-                        MessageUtils.sendError(player, "Not enough args");
+                        MessageUtils.log(player, "Not enough args", LogLevel.ERROR);
                     }
                 } else {
-                    MessageUtils.sendError(player, "You don't have an open editor");
+                    MessageUtils.log(player, "You don't have an open editor", LogLevel.ERROR);
                 }
             }
             case "help" -> player.sendRichMessage(HELP_MSG);
@@ -61,6 +60,4 @@ public class LayoutCommand extends Command {
         }
         return Collections.emptyList();
     }
-
-
 }

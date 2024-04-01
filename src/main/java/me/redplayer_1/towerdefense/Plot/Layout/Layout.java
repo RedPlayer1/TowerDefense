@@ -8,9 +8,11 @@ import org.bukkit.configuration.ConfigurationSection;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+// TODO: add tower list
 public class Layout {
     public static final int SIZE = 11; // in blocks (including border)
     private static HashMap<String, Layout> layouts = new HashMap<>();
+    public static Layout defaultLayout = null; // TODO: make config val (name)
 
     private final Location startLoc;
     private final BlockMesh mesh;
@@ -68,6 +70,9 @@ public class Layout {
         mesh.place(bottomLeft);
     }
 
+    /**
+     * Removes all the blocks and towers within the layout
+     */
     public void remove() {
         mesh.destroy();
     }

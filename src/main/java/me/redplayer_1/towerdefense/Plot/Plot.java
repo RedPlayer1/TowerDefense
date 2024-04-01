@@ -1,6 +1,7 @@
 package me.redplayer_1.towerdefense.Plot;
 
 import me.redplayer_1.towerdefense.Plot.Layout.Layout;
+import me.redplayer_1.towerdefense.Plot.Layout.NoLayoutFoundException;
 import me.redplayer_1.towerdefense.Plot.Layout.NotEnoughPlotSpaceException;
 import me.redplayer_1.towerdefense.Util.BlockMesh;
 import org.bukkit.Bukkit;
@@ -9,6 +10,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A square area (width & length = Layout.SIZE, y is undefined) consisting of a bottom layer of filler blocks, then
@@ -26,19 +28,44 @@ public class Plot {
     }
     private static final World PLOT_WORLD = Bukkit.getWorld("world"); //TODO: make config value
     private static Plot[][] plots = new Plot[plotGridSize][plotGridSize]; // [y][x]
-    private static Location gridOrigin = null; // (0, 0) in relative coordinates
+    private static Location gridOrigin = null; // (0, 0) in relative coordinates TODO: make config value
     private static int usedPlots = 0;
 
     private Layout layout;
     private int x;
     private int y;
 
-    public Plot() throws NotEnoughPlotSpaceException {
+    /**
+     * Creates a new plot using the default layout
+     * @throws NotEnoughPlotSpaceException if the plot grid is full or the grid's origin isn't set
+     * @throws NoLayoutFoundException if no default layout exists
+     */
+    public Plot() throws NotEnoughPlotSpaceException, NoLayoutFoundException {
+        this(null);
+    }
+
+    /**
+     * Create a new plot and add it to the plot grid
+     * @param layout The plot's layout. If null, the default layout will be used
+     * @throws NotEnoughPlotSpaceException if the plot grid is full or the grid's origin isn't set
+     * @throws NoLayoutFoundException if the {@link Layout#defaultLayout default layout} should be used
+     * (layout param is null) but it isn't set
+     */
+    public Plot(@Nullable Layout layout) throws NotEnoughPlotSpaceException, NoLayoutFoundException {
         if (gridOrigin == null) {
             throw new NotEnoughPlotSpaceException("Grid origin not initialized");
         }
         if (usedPlots > plotGridSize * plotGridSize) {
-            throw new NotEnoughPlotSpaceException();
+            throw new NotEnoughPlotSpaceException("Not enough plots");
+        }
+        if (layout == null) {
+            if (Layout.defaultLayout == null) {
+                throw new NoLayoutFoundException("The default layout isn't set");
+            } else {
+                this.layout = Layout.defaultLayout;
+            }
+        } else {
+            this.layout = layout;
         }
 
         // FIXME: alternate method? plots[usedPlots % plotGridSize**2][usedPlots - (usedPlots % plotGridSize**2)]
@@ -115,7 +142,7 @@ public class Plot {
         // serialize Layout
     }
 
-    public static Plot deserialize(ConfigurationSection section) throws NotEnoughPlotSpaceException {
+    public static Plot deserialize(ConfigurationSection section) throws NotEnoughPlotSpaceException, NoLayoutFoundException {
         Plot plot = new Plot();
         return plot;
     }
@@ -123,9 +150,18 @@ public class Plot {
     public static void setPlotGridOrigin(Location origin) {
         gridOrigin = origin;
 
-        // remove all player towers & plot/layout blocks
+        // remove all player towers & plot/layout blocks, then place them according to the new origin
+        /*for (Plot[] plotArray : plots) {
+            for (Plot plot : plotArray) {
+                plot.layout.remove();
+                plot.layout.place();
+            }
+        }         */
+        for (int y = 0; y < plotGridSize; y++) {
+            for (int x = 0; x < plotGridSize; x++) {
 
-        // place plot, layout, and towers
+            }
+        }
     }
 
     /**

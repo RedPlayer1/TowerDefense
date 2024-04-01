@@ -95,7 +95,7 @@ public class BlockMesh {
     /**
      * Sets the bottom left coordinate of the mesh. Changing this will alter where the {@link BlockMesh#destroy()}
      * method occurs (a null value means that the mesh is not placed).
-     * @param bottomLeft
+     * @param bottomLeft the bottom left location of the mesh
      */
     public void setBottomLeft(@Nullable Location bottomLeft) {
         this.bottomLeft = bottomLeft;
