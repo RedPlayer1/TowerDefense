@@ -1,19 +1,21 @@
 package me.redplayer_1.towerdefense.Plot.Layout;
 
+import me.redplayer_1.towerdefense.Exception.NoLayoutFoundException;
 import me.redplayer_1.towerdefense.Plot.Direction;
 import me.redplayer_1.towerdefense.Util.BlockMesh;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 
 // TODO: add tower list
 public class Layout {
     public static final int SIZE = 11; // in blocks (including border)
-    private static HashMap<String, Layout> layouts = new HashMap<>();
+    private static final LinkedList<Layout> layouts = new LinkedList<>();
     public static Layout defaultLayout = null; // TODO: make config val (name)
 
+    private final String name;
     private final Location startLoc;
     private final BlockMesh mesh;
     private final Direction[] path;
@@ -22,17 +24,22 @@ public class Layout {
 
     // creates new layout & adds it as a template (enemies & level uninitialized)
     protected Layout(String name, Location startLoc, BlockMesh mesh, Direction[] path) {
+        this.name = name;
         this.startLoc = startLoc;
         this.mesh = mesh;
         this.path = path;
-        layouts.put(name, this);
+        layouts.add(this);
     }
 
     // get layout from template
-    public Layout(String name /* not case-sensitive */, int level) throws NoLayoutFoundException {
-        Layout layout = layouts.get(name.toLowerCase());
+    public Layout(String name, int level) throws NoLayoutFoundException {
+        Layout layout = null;
+        for (Layout l : layouts) {
+            if (l.name.equals(name)) layout = l;
+        }
         if (layout == null) throw new NoLayoutFoundException();
 
+        this.name = layout.name;
         startLoc = layout.startLoc;
         mesh = layout.mesh;
         path = layout.path;
@@ -77,12 +84,36 @@ public class Layout {
         mesh.destroy();
     }
 
-    public void serialize(ConfigurationSection section) {
-        //TODO
+    public String getName() {
+        return name;
     }
 
-    public Layout deserialize(ConfigurationSection section) {
-        //TODO
+    /**
+     * @return a list of all the registered layouts and their names
+     */
+    public static LinkedList<Layout> getLayouts() {
+        return layouts;
+    }
+
+    /**
+     * @param name the name of the layout to find
+     * @return the layout with that name, or null if it doesn't exist
+     */
+    public static @Nullable Layout getLayout(String name) {
+        for (Layout layout : layouts) {
+            if (layout.name.equals(name)) {
+                return layout;
+            }
+        }
+        return null;
+    }
+
+    public void serialize(ConfigurationSection section) {
+        //FIXME
+    }
+
+    public static Layout deserialize(ConfigurationSection section) {
+        //FIXME
         return null;
     }
 

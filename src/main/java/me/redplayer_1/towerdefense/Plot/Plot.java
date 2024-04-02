@@ -1,8 +1,8 @@
 package me.redplayer_1.towerdefense.Plot;
 
+import me.redplayer_1.towerdefense.Exception.NoLayoutFoundException;
+import me.redplayer_1.towerdefense.Exception.NotEnoughPlotSpaceException;
 import me.redplayer_1.towerdefense.Plot.Layout.Layout;
-import me.redplayer_1.towerdefense.Plot.Layout.NoLayoutFoundException;
-import me.redplayer_1.towerdefense.Plot.Layout.NotEnoughPlotSpaceException;
 import me.redplayer_1.towerdefense.Util.BlockMesh;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

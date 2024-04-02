@@ -1,4 +1,4 @@
-package me.redplayer_1.towerdefense.Plot.Layout;
+package me.redplayer_1.towerdefense.Exception;
 
 public class NotEnoughPlotSpaceException extends Exception {
     public NotEnoughPlotSpaceException() {

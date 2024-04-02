@@ -1,7 +1,7 @@
 package me.redplayer_1.towerdefense;
 
-import me.redplayer_1.towerdefense.Plot.Layout.NoLayoutFoundException;
-import me.redplayer_1.towerdefense.Plot.Layout.NotEnoughPlotSpaceException;
+import me.redplayer_1.towerdefense.Exception.NoLayoutFoundException;
+import me.redplayer_1.towerdefense.Exception.NotEnoughPlotSpaceException;
 import me.redplayer_1.towerdefense.Plot.Plot;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -39,8 +39,7 @@ public class TDPlayer {
                     money = tdPlayer.money;
                     prestige = tdPlayer.prestige;
                     multiplier = tdPlayer.multiplier;
-                } catch (IOException | InvalidConfigurationException ignored) {
-                }
+                } catch (IOException | InvalidConfigurationException ignored) { }
             }
         }
         if (!foundConfig) {
@@ -101,7 +100,7 @@ public class TDPlayer {
         }
     }
 
-    public static TDPlayer deserialize(Config config) throws NotEnoughPlotSpaceException {
+    public static TDPlayer deserialize(Config config) throws NotEnoughPlotSpaceException, NoLayoutFoundException {
         FileConfiguration fConfig = config.getConfig();
         TDPlayer player = new TDPlayer(
                 Bukkit.getPlayer(config.getFile().getName().replace(".yml", "")),

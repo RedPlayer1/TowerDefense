@@ -3,7 +3,6 @@ package me.redplayer_1.towerdefense;
 import me.redplayer_1.towerdefense.Command.LayoutCommand;
 import me.redplayer_1.towerdefense.Command.PlotCommand;
 import me.redplayer_1.towerdefense.Plot.Layout.LayoutEditor;
-import me.redplayer_1.towerdefense.Plot.Plot;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandMap;
 import org.bukkit.plugin.PluginManager;

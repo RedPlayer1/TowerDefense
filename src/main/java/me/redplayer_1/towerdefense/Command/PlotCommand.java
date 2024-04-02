@@ -31,13 +31,8 @@ public class PlotCommand extends Command {
             + MessageUtils.helpEntry("/plot origin", null, "get the origin of the plot grid") + '\n'
             + MessageUtils.helpEntry("/plot setOrigin", "<x> <y> <z>", "set the origin of the plot grid");
 
-
     public PlotCommand() {
         super("plot", "", NORMAL_HELP_MSG, Collections.emptyList());
-    }
-
-    private boolean isPrivileged(Player player) {
-        return player.isOp(); //TODO: privileged perms list in config
     }
 
     @Override
@@ -48,6 +43,7 @@ public class PlotCommand extends Command {
         }
 
         if (args.length == 0) {
+            // attempt to tp player to plot
             TDPlayer tdPlayer = TDPlayer.of(player);
             if (tdPlayer == null) {
                 MessageUtils.log(player, "You must have a plot to run this command!", LogLevel.ERROR);
@@ -57,7 +53,8 @@ public class PlotCommand extends Command {
             return true;
         }
 
-        if (isPrivileged(player)) {
+        if (TDPlayer.isPrivileged(player)) {
+            // privileged/management commands
             switch (args[0].toLowerCase()) {
                 case "help" -> player.sendRichMessage(PRIVILEGED_HELP_MSG);
                 case "manage" -> MessageUtils.log(player, "not implemented", LogLevel.ERROR); //TODO
@@ -93,6 +90,7 @@ public class PlotCommand extends Command {
             return true;
         }
 
+        // unprivileged commands
         if (args[0].equalsIgnoreCase("help")) {
             player.sendRichMessage(NORMAL_HELP_MSG);
         } else if (args.length > 1) {
@@ -109,13 +107,12 @@ public class PlotCommand extends Command {
             }
             return true;
         }
-
         return false;
     }
 
     @Override
     public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException {
         if (!(sender instanceof Player player)) return Collections.emptyList();
-        return isPrivileged(player) ? PRIVILEGED_ARGS : NORMAL_ARGS;
+        return TDPlayer.isPrivileged(player) ? PRIVILEGED_ARGS : NORMAL_ARGS;
     }
 }
