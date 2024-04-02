@@ -61,6 +61,7 @@ public class LayoutEditor {
         playerInventory = player.getInventory().getContents();
         player.getInventory().setContents(toolInventory);
         path = new LinkedList<>();
+        placedNodes = new LinkedList<>();
 
         // create base platform
         bottomPlatform = new BlockMesh(Layout.SIZE, Layout.SIZE, 1);

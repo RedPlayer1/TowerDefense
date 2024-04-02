@@ -16,11 +16,12 @@ import java.util.List;
  * Root command for managing and creating layouts
  */
 public class LayoutCommand extends Command {
-    private static final List<String> ARGS = List.of("create", "edit", "save", "list", "default", "help");
+    private static final List<String> ARGS = List.of("create", "edit", "save", "quit", "list", "default", "help");
     private static final String HELP_MSG =
             MessageUtils.helpEntry("/layout create", "<layout name>", "open/start editor") + '\n'
             + MessageUtils.helpEntry("/layout edit", "<layout name>", "open existing layout") + '\n'
             + MessageUtils.helpEntry("/layout save", null, "save open editor and create a layout") + '\n'
+            + MessageUtils.helpEntry("/layout quit", null, "exit the open editor without saving it") + '\n'
             + MessageUtils.helpEntry("/layout list",  null, "list all saved layout templates") + '\n'
             + MessageUtils.helpEntry("/layout default", null, "get the default layout's name") + '\n'
             + MessageUtils.helpEntry("/layout default", "<layout name>", "set the default layout") + '\n'
@@ -36,6 +37,9 @@ public class LayoutCommand extends Command {
             sender.sendMessage("You must be a player to run this command.");
             return true;
         }
+        if (args.length < 1) {
+            MessageUtils.log(player, "Not enough args", LogLevel.ERROR);
+        }
         switch (args[0].toLowerCase()) {
             case "create" -> new LayoutEditor(player);
             case "edit" -> MessageUtils.log(player, "Not Implemented", LogLevel.ERROR);
@@ -49,6 +53,15 @@ public class LayoutCommand extends Command {
                     }
                 } else {
                     MessageUtils.log(player, "You don't have an open editor", LogLevel.ERROR);
+                }
+            }
+            case "quit" -> {
+                LayoutEditor editor = LayoutEditor.getEditor(player);
+                if (editor != null) {
+                    editor.close();
+                    MessageUtils.log(player, "Closed the editor", LogLevel.SUCCESS);
+                } else {
+                    MessageUtils.log(player, "No open editor", LogLevel.ERROR);
                 }
             }
             case "list" -> {
@@ -94,7 +107,7 @@ public class LayoutCommand extends Command {
 
     @Override
     public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException {
-        if (args.length < 1) {
+        if (args.length <= 1) {
             return ARGS;
         }
         return Collections.emptyList();

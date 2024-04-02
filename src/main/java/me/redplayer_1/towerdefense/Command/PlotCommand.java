@@ -67,20 +67,28 @@ public class PlotCommand extends Command {
                         MessageUtils.log(player, "Plot grid size is now " + args[1], LogLevel.SUCCESS);
                     }
                 }
-                case "origin" -> MessageUtils.log(player, Plot.getGridOrigin().toString(), LogLevel.SUCCESS);
+                case "origin" -> {
+                    if (Plot.getGridOrigin() != null) {
+                        MessageUtils.log(player, Plot.getGridOrigin().toString(), LogLevel.SUCCESS);
+                    } else {
+                        MessageUtils.log(player, "The plot origin isn't set", LogLevel.WARN);
+                    }
+                }
                 case "setorigin" -> {
                     if (args.length < 4) {
                         MessageUtils.log(player, "Not enough args", LogLevel.ERROR);
                     } else {
                         try {
                             Location newOrigin = new Location(
-                                    Plot.getGridOrigin().getWorld(),
+                                    player.getWorld(),
                                     Integer.parseInt(args[1]),
                                     Integer.parseInt(args[2]),
                                     Integer.parseInt(args[3])
                             );
                             Plot.setPlotGridOrigin(newOrigin);
-                            MessageUtils.log(player, "New plot grid origin is " + newOrigin, LogLevel.SUCCESS);
+                            MessageUtils.log(player,
+                                    "New plot grid origin is " + args[1] + ' ' + args[2] + ' ' + args[3] + " in world " + newOrigin.getWorld().getName(),
+                                    LogLevel.SUCCESS);
                         } catch (NumberFormatException e) {
                             MessageUtils.log(player, "Origin x, y, and z must be integers", LogLevel.ERROR);
                         }
@@ -112,7 +120,7 @@ public class PlotCommand extends Command {
 
     @Override
     public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException {
-        if (!(sender instanceof Player player)) return Collections.emptyList();
+        if (!(sender instanceof Player player) || args.length > 1) return Collections.emptyList();
         return TDPlayer.isPrivileged(player) ? PRIVILEGED_ARGS : NORMAL_ARGS;
     }
 }
