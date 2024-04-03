@@ -1,5 +1,6 @@
 package me.redplayer_1.towerdefense.Util;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -70,6 +71,7 @@ public class BlockMesh {
      * @param bottomLeft the location of the bottom left corner of the placement
      */
     public void place(Location bottomLeft) {
+        Bukkit.broadcast(Component.text("blockmesh#place@" + bottomLeft));
         this.bottomLeft = bottomLeft;
         forEachBlock(bottomLeft, (loc, rel) ->
                 loc.getWorld().setType(loc, mesh[rel.y][rel.z][rel.x])
@@ -109,9 +111,9 @@ public class BlockMesh {
      *               in the mesh.
      */
     public void forEachBlock(Location bottomLeft, BiConsumer<Location, Vector3> action) {
-        final int maxY = bottomLeft.getBlockY() + height - 1;
-        final int maxZ = bottomLeft.getBlockZ() + depth - 1;
-        final int maxX = bottomLeft.getBlockX() + width - 1;
+        final int maxY = bottomLeft.getBlockY() + height;
+        final int maxZ = bottomLeft.getBlockZ() + depth;
+        final int maxX = bottomLeft.getBlockX() + width;
 
         for (int y = bottomLeft.getBlockY(), relY = 0; y < maxY; y++, relY++) {
             for (int z = bottomLeft.getBlockZ(), relZ = 0; z < maxZ; z++, relZ++) {
