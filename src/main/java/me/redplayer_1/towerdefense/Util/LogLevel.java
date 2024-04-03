@@ -8,7 +8,7 @@ public enum LogLevel {
     /**
      * An operation has been successfully completed
      */
-    SUCCESS("<dark_green>✓</dark_green> <green>", "/green>"),
+    SUCCESS("<dark_green>✓</dark_green> <green>", "</green>"),
     /**
      * Send text; no significance
      */
