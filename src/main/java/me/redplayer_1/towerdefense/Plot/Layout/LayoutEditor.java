@@ -1,5 +1,6 @@
 package me.redplayer_1.towerdefense.Plot.Layout;
 
+import me.redplayer_1.towerdefense.Exception.NodeOutOfBoundsException;
 import me.redplayer_1.towerdefense.Plot.Direction;
 import me.redplayer_1.towerdefense.TowerDefense;
 import me.redplayer_1.towerdefense.Util.BlockMesh;
@@ -33,14 +34,10 @@ public class LayoutEditor {
     private static final NamespacedKey KEY = new NamespacedKey(TowerDefense.INSTANCE, "layoutitem");
     private static final ItemStack[] toolInventory = new ItemStack[4];
     static {
-        toolInventory[0] = ItemUtils.create("left", Material.STICK);
-        toolInventory[1] = ItemUtils.create("forward", Material.STICK);
-        toolInventory[2] = ItemUtils.create("right", Material.STICK);
-        toolInventory[3] = ItemUtils.create("delete", Material.REDSTONE_BLOCK);
-
-        for (int i = 0; i < toolInventory.length; i++) {
-            toolInventory[i].getItemMeta().getPersistentDataContainer().set(KEY, PersistentDataType.INTEGER, i);
-        }
+        toolInventory[0] = ItemUtils.create("Left", Material.STICK);
+        toolInventory[1] = ItemUtils.create("Forward", Material.STICK);
+        toolInventory[2] = ItemUtils.create("Right", Material.STICK);
+        toolInventory[3] = ItemUtils.create("Delete", Material.RED_DYE);
     }
 
     private final Player player;
@@ -48,7 +45,7 @@ public class LayoutEditor {
     private final BlockMesh bottomPlatform;
     private final BlockMesh placementArea;
     private Location startLoc;
-    private Location currentNodeLoc;
+    private Location currentNodeLoc; // world location of the most recently placed node
     private LinkedList<Direction> path;
     private LinkedList<Entity> placedNodes; // armor stand indicators that nodes have been placed
 
@@ -82,9 +79,9 @@ public class LayoutEditor {
 
     /**
      * Add a node to the layout
-     * @param direction the relative direction of the node (may only be west (left), east (right), or north (forward))
+     * @param direction the relative direction of the node (may not be south)
      */
-    public void addNode(Direction direction) {
+    public void addNode(Direction direction) throws NodeOutOfBoundsException {
         if (startLoc == null) throw new IllegalStateException("Cannot add a node without a start location");
         if (!path.isEmpty()) {
             Direction prevDir = path.peekLast();
@@ -94,10 +91,14 @@ public class LayoutEditor {
                 case EAST -> prevDir.right();
                 default -> throw new IllegalStateException("Cannot add a node facing south");
             };
-            currentNodeLoc = direction.getFromLocation(currentNodeLoc);
+            currentNodeLoc = direction.getFromLocation(currentNodeLoc, 1);
+        }
+        if (!placementArea.contains(currentNodeLoc)) {
+            currentNodeLoc = direction.getFromLocation(currentNodeLoc, -1);
+            throw new NodeOutOfBoundsException();
         }
         BlockDisplay node = (BlockDisplay) startLoc.getWorld().spawnEntity(
-                currentNodeLoc,
+                new Location(startLoc.getWorld(), currentNodeLoc.getBlockX(), currentNodeLoc.y() + .4, currentNodeLoc.getBlockZ()),
                 EntityType.BLOCK_DISPLAY
         );
         final Direction finalDirection = direction;
@@ -116,6 +117,16 @@ public class LayoutEditor {
         node.setDisplayHeight(.3f);
         placedNodes.add(node);
         path.add(direction);
+    }
+
+    /**
+     * Removes the most recently placed node from the editor. Fails silently if there are no nodes or the only node
+     * that exists is the starting one.
+     */
+    public void removeLastNode() {
+        if (path.size() <= 1) return;
+        currentNodeLoc = path.removeLast().getFromLocation(currentNodeLoc, -1);
+        placedNodes.removeLast().remove();
     }
 
     /**
@@ -185,13 +196,14 @@ public class LayoutEditor {
             Player p = event.getPlayer();
             LayoutEditor editor = openEditors.get(p);
             if (editor == null) return;
-            ItemStack item = event.getItem();
+            ItemStack item = event.getPlayer().getInventory().getItemInMainHand();
             Block block = event.getClickedBlock();
+
             if (editor.path.isEmpty()) {
                 // no nodes placed, set starting node to clicked block
                 if (block == null) {
                     MessageUtils.log(p, "Click on a block to set the starting position", LogLevel.ERROR);
-                } else {
+                } else if (editor.placementArea.contains(block.getLocation())) {
                     Direction dir = switch (event.getPlayer().getFacing()) {
                         case NORTH, NORTH_NORTH_EAST, NORTH_NORTH_WEST, NORTH_WEST, NORTH_EAST -> Direction.NORTH;
                         case SOUTH, SOUTH_SOUTH_WEST, SOUTH_SOUTH_EAST, SOUTH_WEST, SOUTH_EAST -> Direction.SOUTH;
@@ -200,35 +212,50 @@ public class LayoutEditor {
                         case UP, DOWN, SELF -> null; // player facing will always be an ordinal direction
                     };
                     editor.setStartLoc(block.getLocation());
-                    editor.addNode(dir);
-                    MessageUtils.log(p, "Set starting location", LogLevel.SUCCESS);
-                }
-                return;
-            }
-
-            if (item == null || item.getType() == Material.AIR || !item.getItemMeta().getPersistentDataContainer().has(KEY)) {
-                MessageUtils.log(p, "Use the inventory tools to modify the layout", LogLevel.ERROR);
-                return;
-            }
-            Direction dir = switch (item.getItemMeta().getPersistentDataContainer().get(KEY, PersistentDataType.INTEGER)) {
-                case 0 -> Direction.WEST;
-                case 1 -> Direction.NORTH;
-                case 2 -> Direction.EAST;
-                default -> null;
-            };
-            if (dir == null) {
-                // remove last node
-                if (editor.path.isEmpty()) {
-                    MessageUtils.log(editor.player, "No nodes have been placed.", LogLevel.ERROR);
+                    try {
+                        editor.addNode(dir);
+                        MessageUtils.log(p, "Set starting location", LogLevel.SUCCESS);
+                    } catch (NodeOutOfBoundsException ignored) { }
                 } else {
-                    editor.path.removeLast();
-                    MessageUtils.log(editor.player, "<red>Removed last node.</red>", LogLevel.ERROR);
+                    MessageUtils.log(p, "Starting location must be within the layout", LogLevel.ERROR);
                 }
                 return;
             }
-            editor.addNode(dir);
-            p.playSound(p, Sound.BLOCK_NOTE_BLOCK_CHIME, 1, 1);
-            MessageUtils.log(p, "Placed node facing " + dir.name().toLowerCase() + ".", LogLevel.SUCCESS);
+            Direction dir = null;
+            boolean remove = false;
+            if (item.getType() != Material.AIR && item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+                dir = switch (MessageUtils.fromMiniMessage(item.getItemMeta().displayName())) {
+                    case "Left" -> Direction.WEST;
+                    case "Forward" -> Direction.NORTH;
+                    case "Right" -> Direction.EAST;
+                    case "Delete" -> {
+                        remove = true;
+                        yield null;
+                    }
+                    default -> null;
+                };
+            }
+            if (dir == null) {
+                if (remove) {
+                    if (editor.path.isEmpty()) {
+                        MessageUtils.log(editor.player, "No nodes have been placed.", LogLevel.ERROR);
+                    } else {
+                        editor.removeLastNode();
+                        MessageUtils.log(editor.player, "<red>Removed last node.</red>", LogLevel.SUCCESS);
+                    }
+                } else {
+                    MessageUtils.log(p, "Use the inventory tools to modify the layout", LogLevel.ERROR);
+                    return;
+                }
+                return;
+            }
+            try {
+                editor.addNode(dir); // automatically handles relative locations
+                p.playSound(p, Sound.BLOCK_NOTE_BLOCK_CHIME, 1, 1);
+                MessageUtils.log(p, "Placed node facing " + dir.name().toLowerCase() + ".", LogLevel.SUCCESS);
+            } catch (NodeOutOfBoundsException e) {
+                MessageUtils.log(p, "Didn't place node as it would be out of bounds", LogLevel.WARN);
+            }
         }
     }
 }

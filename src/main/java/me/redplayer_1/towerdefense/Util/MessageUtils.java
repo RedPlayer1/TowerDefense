@@ -32,4 +32,13 @@ public final class MessageUtils {
     public static Component asMiniMessage(String text) {
         return MMSG.deserialize(text);
     }
+
+    /**
+     * Converts a component (MiniMessage) into its String representation
+     * @param mmsg the component to serialize
+     * @return the serialized component or "" if an error occurred
+     */
+    public static String fromMiniMessage(Component mmsg) {
+        return MMSG.serializeOr(mmsg, "");
+    }
 }

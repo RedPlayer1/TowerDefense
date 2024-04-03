@@ -35,15 +35,16 @@ public enum Direction {
     /**
      * Returns the location 1 block in this direction
      * @param base the starting location
+     * @param distance the distance the new location is from the base (going straight in this direction)
      * @return a new location 1 block in this direction
      */
-    public Location getFromLocation(Location base) {
+    public Location getFromLocation(Location base, double distance) {
         Location result = new Location(base.getWorld(), base.getX(), base.getY(), base.getZ());
         switch (this) {
-            case NORTH -> result.add(0, 0, -1);
-            case SOUTH -> result.add(0, 0, 1);
-            case EAST -> result.add(1, 0, 0);
-            case WEST -> result.add(-1, 0, 0);
+            case NORTH -> result.add(0, 0, -distance);
+            case SOUTH -> result.add(0, 0, distance);
+            case EAST -> result.add(distance, 0, 0);
+            case WEST -> result.add(-distance, 0, 0);
         }
         return result;
     }

@@ -16,11 +16,12 @@ import java.util.List;
  * Root command for managing and creating layouts
  */
 public class LayoutCommand extends Command {
-    private static final List<String> ARGS = List.of("create", "edit", "save", "quit", "list", "default", "help");
+    private static final List<String> ARGS = List.of("create", "edit", "save", "delete", "quit", "list", "default", "help");
     private static final String HELP_MSG =
-            MessageUtils.helpEntry("/layout create", "<layout name>", "open/start editor") + '\n'
-            + MessageUtils.helpEntry("/layout edit", "<layout name>", "open existing layout") + '\n'
-            + MessageUtils.helpEntry("/layout save", null, "save open editor and create a layout") + '\n'
+            MessageUtils.helpEntry("/layout create", null, "open/start editor") + '\n'
+            + MessageUtils.helpEntry("/layout edit", "<name>", "open existing layout") + '\n'
+            + MessageUtils.helpEntry("/layout save", "<name>", "save open editor and create a layout") + '\n'
+            + MessageUtils.helpEntry("/layout delete", "<name>", "delete a layout") + '\n'
             + MessageUtils.helpEntry("/layout quit", null, "exit the open editor without saving it") + '\n'
             + MessageUtils.helpEntry("/layout list",  null, "list all saved layout templates") + '\n'
             + MessageUtils.helpEntry("/layout default", null, "get the default layout's name") + '\n'
@@ -39,6 +40,7 @@ public class LayoutCommand extends Command {
         }
         if (args.length < 1) {
             MessageUtils.log(player, "Not enough args", LogLevel.ERROR);
+            return true;
         }
         switch (args[0].toLowerCase()) {
             case "create" -> new LayoutEditor(player);
@@ -55,6 +57,7 @@ public class LayoutCommand extends Command {
                     MessageUtils.log(player, "You don't have an open editor", LogLevel.ERROR);
                 }
             }
+            case "delete" -> MessageUtils.log(player, "Not Implemented", LogLevel.ERROR);
             case "quit" -> {
                 LayoutEditor editor = LayoutEditor.getEditor(player);
                 if (editor != null) {
@@ -86,10 +89,12 @@ public class LayoutCommand extends Command {
                                         + "</i></white>)",
                                 LogLevel.SUCCESS
                         );
+                        Layout.defaultLayout = newDefault;
                     } else {
                         MessageUtils.log(player, "No layout named " + args[1] + " exists", LogLevel.ERROR);
                     }
                 } else {
+                    // send current default layout
                     if (Layout.defaultLayout != null) {
                         MessageUtils.log(player,
                                 "The default layout is <white><i>" + Layout.defaultLayout.getName() + "</i></white",

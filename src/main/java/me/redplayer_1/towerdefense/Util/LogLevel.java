@@ -8,19 +8,19 @@ public enum LogLevel {
     /**
      * An operation has been successfully completed
      */
-    SUCCESS("<dark_green>✓</dark_green> <green>", "</green>"),
+    SUCCESS("<dark_green><b>✓</b></dark_green> <green>", "</green>"),
     /**
      * Send text; no significance
      */
-    NORMAL("<white>", "</white>"),
+    NORMAL("<gray><i>", "<i></gray>"),
     /**
      * An operation encountered a recoverable error
      */
-    WARN("<gold><i>Warning:</i> ", "</gold>"),
+    WARN("<gold>Warning: <yellow>", "</yellow></gold>"),
     /**
      * An operation encountered an unrecoverable error
      */
-    ERROR("<dark_red>Error: ", "</dark_red>"),
+    ERROR("<dark_red>Error: <red>", "</red></dark_red>"),
     /**
      * An operation encountered a severe unrecoverable error that must be resolved
      */
