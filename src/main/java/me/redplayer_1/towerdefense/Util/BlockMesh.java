@@ -10,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 
@@ -23,7 +22,7 @@ public class BlockMesh {
     public final int width; // x
     public final int depth; // z
     public final int height; // y
-    private Material[][][] mesh; // [y][z][x]
+    private final Material[][][] mesh; // [y][z][x]
     private @Nullable Location bottomLeft;
 
     /**
@@ -159,7 +158,7 @@ public class BlockMesh {
     }
 
     /**
-     * Serializes the mesh into the config section provided (includes bottomLeft).
+     * Serializes the mesh into a new section created within the root.
      * If a section with this name already exists in the section, it is overwritten.
      *
      * @param rootSection the root section for the mesh to be stored
@@ -168,12 +167,7 @@ public class BlockMesh {
     public void serialize(ConfigurationSection rootSection, String meshName) {
         ConfigurationSection section = rootSection.createSection(meshName);
         if (bottomLeft != null) {
-            section.set("location",
-                    bottomLeft.getWorld().getUID() + DATA_SEPARATOR
-                            + bottomLeft.getBlockX() + DATA_SEPARATOR
-                            + bottomLeft.getBlockY() + DATA_SEPARATOR
-                            + bottomLeft.getBlockZ()
-            );
+            LocationUtils.serialize(bottomLeft, section, "bottomLeft");
         }
         section.set("width", width);
         section.set("depth", depth);
@@ -195,15 +189,10 @@ public class BlockMesh {
     /**
      * Deserializes a named BlockMesh from a ConfigurationSection.
      *
-     * @param rootSection the section that the mesh is stored in
-     * @param name        the case-sensitive name of the mesh
      * @return the deserialized mesh or null if it couldn't be found
      * @throws InvalidConfigurationException if required values are missing from the root section
      */
-    public static @Nullable BlockMesh deserialize(ConfigurationSection rootSection, String name) throws InvalidConfigurationException {
-        ConfigurationSection section = rootSection.getConfigurationSection(name);
-        if (section == null) return null;
-
+    public static BlockMesh deserialize(ConfigurationSection section) throws InvalidConfigurationException {
         BlockMesh mesh;
         try {
             mesh = new BlockMesh(
@@ -214,19 +203,8 @@ public class BlockMesh {
         } catch (NullPointerException e) {
             throw new InvalidConfigurationException("Missing width, depth, and/or height");
         }
-
-        String[] strs = section.getString("location", "").split("::");
-        if (strs.length >= 4) {
-            try {
-                mesh.bottomLeft = new Location(
-                        Bukkit.getWorld(UUID.fromString(strs[0])),
-                        Integer.parseInt(strs[1]),
-                        Integer.parseInt(strs[2]),
-                        Integer.parseInt(strs[3])
-                );
-            } catch (NullPointerException | NumberFormatException e) {
-                throw new InvalidConfigurationException("Invalid Location");
-            }
+        if (section.isConfigurationSection("bottomLeft")) {
+            mesh.bottomLeft = LocationUtils.deserialize(section.getConfigurationSection("bottomLeft"));
         }
 
         List<String> blocks = section.getStringList("blocks");

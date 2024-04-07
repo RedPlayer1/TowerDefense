@@ -22,7 +22,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -41,13 +40,14 @@ public class LayoutEditor {
     }
 
     private final Player player;
+    private final @Nullable String name; // only set if the editor is editing an existing layout
     private final ItemStack[] playerInventory;
-    private final BlockMesh bottomPlatform;
+    private BlockMesh bottomPlatform;
     private final BlockMesh placementArea;
     private Location startLoc;
     private Location currentNodeLoc; // world location of the most recently placed node
-    private LinkedList<Direction> path;
-    private LinkedList<Entity> placedNodes; // armor stand indicators that nodes have been placed
+    private final LinkedList<Direction> path;
+    private final LinkedList<Entity> placedNodes; // armor stand indicators that nodes have been placed
 
     /**
      * Create a layout at the player's location and put editing tools in their inventory
@@ -55,26 +55,50 @@ public class LayoutEditor {
      */
     public LayoutEditor(Player player) {
         this.player = player;
+        name = null;
         playerInventory = player.getInventory().getContents();
         player.getInventory().setContents(toolInventory);
         path = new LinkedList<>();
         placedNodes = new LinkedList<>();
+        placeBottomPlatform(player);
+        placementArea = new BlockMesh(Layout.SIZE, Layout.SIZE, 1);
+        placementArea.fillMesh(Material.GRASS_BLOCK);
+        placementArea.place(player.getLocation().subtract(0, 1, 0));
+        openEditors.put(player, this);
+    }
 
-        // create base platform
+    /**
+     * Create an editor to edit an existing
+     * @param player the player editing the layout
+     * @param template the layout/template to edit
+     */
+    public LayoutEditor(Player player, Layout template) {
+        this.player = player;
+        name = template.getName();
+        playerInventory = player.getInventory().getContents();
+        player.getInventory().setContents(toolInventory);
+        path = new LinkedList<>();
+        placedNodes = new LinkedList<>();
+        for (Direction dir : template.getPath()) {
+            try {
+                addNode(dir);
+            } catch (NodeOutOfBoundsException e) {
+                MessageUtils.log(player, "Layout \"" + name + "\" has a node with an invalid location. All subsequent nodes have been discarded.", LogLevel.WARN);
+                break;
+            }
+        }
+        placeBottomPlatform(player);
+        placementArea = template.getMesh();
+        placementArea.place(player.getLocation().subtract(0, 1, 0));
+        startLoc = template.getStartLocation();
+        openEditors.put(player, this);
+    }
+
+    private void placeBottomPlatform(Player player) {
         bottomPlatform = new BlockMesh(Layout.SIZE, Layout.SIZE, 1);
         bottomPlatform.fillMesh(Material.STONE_BRICKS);
         // TODO: error handling if player isn't within build limits (-64 to 320 (overworld))
         bottomPlatform.place(player.getLocation().subtract(0, 2, 0));
-        placementArea = new BlockMesh(Layout.SIZE, Layout.SIZE, 1);
-        placementArea.fillMesh(Material.GRASS_BLOCK);
-        placementArea.place(player.getLocation().subtract(0, 1, 0));
-
-        openEditors.put(player, this);
-    }
-
-    public LayoutEditor(Player player, Layout template) {
-        this(player);
-        // TODO: load & place layout blocks & create node blockdisplays
     }
 
     /**
@@ -136,9 +160,9 @@ public class LayoutEditor {
      * @return the created layout (or null if the layout is incomplete)
      * @see LayoutEditor#close()
      */
-    public Layout save(String name) {
+    public @Nullable Layout save(String name) {
         if (startLoc == null) return null;
-        return new Layout(name, startLoc, close(), path.toArray(new Direction[0]));
+        return new Layout(name, startLoc, close(), path.toArray(new Direction[0]), true);
     }
 
     /**
@@ -179,6 +203,13 @@ public class LayoutEditor {
 
     public BlockMesh getPlacementArea() {
         return placementArea;
+    }
+
+    /**
+     * @return The name of the layout being edited. If the editor is for a new layout, this will be null.
+     */
+    public @Nullable String getEditedLayoutName() {
+        return name;
     }
 
     /**

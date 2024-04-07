@@ -20,7 +20,7 @@ public class LayoutCommand extends Command {
     private static final String HELP_MSG =
             MessageUtils.helpEntry("/layout create", null, "open/start editor") + '\n'
             + MessageUtils.helpEntry("/layout edit", "<name>", "open existing layout") + '\n'
-            + MessageUtils.helpEntry("/layout save", "<name>", "save open editor and create a layout") + '\n'
+            + MessageUtils.helpEntry("/layout save", "<name>", "save open editor and create a layout (not needed if editing an existing layout)") + '\n'
             + MessageUtils.helpEntry("/layout delete", "<name>", "delete a layout") + '\n'
             + MessageUtils.helpEntry("/layout quit", null, "exit the open editor without saving it") + '\n'
             + MessageUtils.helpEntry("/layout list",  null, "list all saved layout templates") + '\n'
@@ -44,12 +44,27 @@ public class LayoutCommand extends Command {
         }
         switch (args[0].toLowerCase()) {
             case "create" -> new LayoutEditor(player);
-            case "edit" -> MessageUtils.log(player, "Not Implemented", LogLevel.ERROR);
+            case "edit" -> {
+                if (args.length >= 2) {
+                    Layout layout = Layout.getLayout(args[1]);
+                    if (layout != null) {
+                        new LayoutEditor(player, layout);
+                    } else {
+                        MessageUtils.log(player, "Layout \"" + args[1] + "\" does not exist.", LogLevel.ERROR);
+                    }
+                } else {
+                    MessageUtils.log(player, "Not enough args", LogLevel.ERROR);
+                }
+            }
             case "save" -> {
                 LayoutEditor editor = LayoutEditor.getEditor(player);
                 if (editor != null) {
-                    if (args.length >= 2) {
+                    if (editor.getEditedLayoutName() != null) {
+                        editor.save(editor.getEditedLayoutName());
+                        MessageUtils.log(player, "Layout updated.", LogLevel.SUCCESS);
+                    } else if (args.length >= 2) {
                         editor.save(args[1]);
+                        MessageUtils.log(player, "Layout saved.", LogLevel.SUCCESS);
                     } else {
                         MessageUtils.log(player, "Not enough args", LogLevel.ERROR);
                     }
@@ -57,7 +72,17 @@ public class LayoutCommand extends Command {
                     MessageUtils.log(player, "You don't have an open editor", LogLevel.ERROR);
                 }
             }
-            case "delete" -> MessageUtils.log(player, "Not Implemented", LogLevel.ERROR);
+            case "delete" -> {
+                if (args.length < 2) {
+                    MessageUtils.log(player, "Not Enough args", LogLevel.ERROR);
+                } else {
+                    if (Layout.removeLayout(args[1]) != null) {
+                        MessageUtils.log(player, "Removed layout", LogLevel.SUCCESS);
+                    } else {
+                        MessageUtils.log(player, "No layout named \"" + args[1] + "\" exists", LogLevel.WARN);
+                    }
+                }
+            }
             case "quit" -> {
                 LayoutEditor editor = LayoutEditor.getEditor(player);
                 if (editor != null) {
