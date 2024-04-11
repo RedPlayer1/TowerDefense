@@ -48,9 +48,10 @@ public final class TowerDefense extends JavaPlugin {
         ConfigurationSection templateConfig = layoutTemplates.getConfig();
         int count = 0;
         for (String name : templateConfig.getKeys(false)) {
-            if (templateConfig.isConfigurationSection("name")) {
+            ConfigurationSection namedSection = templateConfig.getConfigurationSection(name);
+            if (namedSection != null) {
                 try {
-                    Layout.deserialize(templateConfig.getConfigurationSection(name), true);
+                    Layout.deserialize(namedSection, true);
                     count++;
                 } catch (InvalidConfigurationException e) {
                     MessageUtils.log(Bukkit.getConsoleSender(), "Invalid layout template for Layout \"" + name + "\". Skipping. . .", LogLevel.WARN);
@@ -71,6 +72,19 @@ public final class TowerDefense extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        // Save layouts
+        if (layoutTemplates.getFile().delete()) {
+            try {
+                //noinspection ResultOfMethodCallIgnored
+                layoutTemplates.getFile().createNewFile();
+            } catch (IOException e) {
+                MessageUtils.log(Bukkit.getConsoleSender(), "IO error whilst deleting contents of layout config", LogLevel.CRITICAL);
+            }
+        }
+        ConfigurationSection layoutConfig = layoutTemplates.getConfig();
+        for (Layout layout : Layout.getLayouts()) {
+            layout.serialize(layoutConfig);
+        }
+        MessageUtils.log(Bukkit.getConsoleSender(), "Saved " + Layout.getLayouts().size() + " layout templates", LogLevel.SUCCESS);
     }
 }
