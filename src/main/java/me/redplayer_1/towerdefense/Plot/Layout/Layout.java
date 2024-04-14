@@ -12,37 +12,40 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Arrays;
 import java.util.LinkedList;
 
-// TODO: add tower list
 public class Layout {
     public static final int SIZE = 11; // in blocks (including border)
     private static final LinkedList<Layout> layouts = new LinkedList<>();
     public static Layout defaultLayout = null; // TODO: make config val (name)
 
+    private final boolean isTemplate;
     private final String name;
     private final Location startLoc;
     private final BlockMesh mesh;
     private final Direction[] path;
     private LinkedList<Enemy> enemies;
+    private LinkedList<Tower> towers;
     private float enemyTickRate; // -1 = n/a (layout is a template)
 
-    // creates new layout & adds it as a template (enemies & level uninitialized)
+    // creates new layout & adds it as a template (enemies, level, & towers uninitialized)
     protected Layout(String name, Location startLoc, BlockMesh mesh, Direction[] path, boolean isTemplate) {
         this.name = name;
         this.startLoc = startLoc;
         this.mesh = mesh;
         this.path = path;
         enemyTickRate = -1;
+        this.isTemplate = isTemplate;
         if (isTemplate) layouts.add(this);
     }
 
     // get layout from template
-    public Layout(String name, int enemyTickRate) throws NoLayoutFoundException {
+    public Layout(String name, int enemyTickRate, Tower... towers) throws NoLayoutFoundException {
         Layout layout = null;
         for (Layout l : layouts) {
             if (l.name.equals(name)) layout = l;
         }
         if (layout == null) throw new NoLayoutFoundException();
 
+        isTemplate = false;
         this.name = layout.name;
         startLoc = layout.startLoc;
         mesh = layout.mesh;

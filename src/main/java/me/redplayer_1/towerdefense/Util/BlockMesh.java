@@ -87,10 +87,10 @@ public class BlockMesh {
     }
 
     /**
-     * @return the bottom left corner of the block mesh (if it exists)
+     * @return a copy of the bottom left corner of the block mesh (if it exists)
      */
     public @Nullable Location getBottomLeft() {
-        return bottomLeft;
+        return bottomLeft != null? bottomLeft.clone() : null;
     }
 
     /**

@@ -4,7 +4,9 @@ import me.redplayer_1.towerdefense.Command.LayoutCommand;
 import me.redplayer_1.towerdefense.Command.PlotCommand;
 import me.redplayer_1.towerdefense.Plot.Layout.Layout;
 import me.redplayer_1.towerdefense.Plot.Layout.LayoutEditor;
+import me.redplayer_1.towerdefense.Plot.Layout.Towers;
 import me.redplayer_1.towerdefense.Util.LogLevel;
+import me.redplayer_1.towerdefense.Util.MeshEditor;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandMap;
@@ -19,20 +21,21 @@ public final class TowerDefense extends JavaPlugin {
     public static TowerDefense INSTANCE;
     public Config mainConfig;
     public Config layoutTemplates;
-
-    {
-        try {
-            mainConfig = new Config("Config");
-            layoutTemplates = new Config("LayoutTemplates");
-        } catch (IOException | InvalidConfigurationException e) {
-            MessageUtils.log(Bukkit.getConsoleSender(), "Couldn't loading configuration files!", LogLevel.CRITICAL);
-            Bukkit.getLogger().severe(e.getMessage());
-        }
-    }
+    public Config towerTemplates;
 
     @Override
     public void onEnable() {
         INSTANCE = this;
+        try {
+            mainConfig = new Config("Config");
+            layoutTemplates = new Config("LayoutTemplates");
+            towerTemplates = new Config("TowerTemplates");
+        } catch (IOException | InvalidConfigurationException e) {
+            MessageUtils.log(Bukkit.getConsoleSender(), "Couldn't loading configuration files!", LogLevel.CRITICAL);
+            Bukkit.getLogger().severe(e.getMessage());
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        }
 
         // Commands
         CommandMap commandMap = Bukkit.getCommandMap();
@@ -47,18 +50,20 @@ public final class TowerDefense extends JavaPlugin {
         // Load layout templates
         ConfigurationSection templateConfig = layoutTemplates.getConfig();
         int count = 0;
-        for (String name : templateConfig.getKeys(false)) {
-            ConfigurationSection namedSection = templateConfig.getConfigurationSection(name);
-            if (namedSection != null) {
-                try {
-                    Layout.deserialize(namedSection, true);
-                    count++;
-                } catch (InvalidConfigurationException e) {
-                    MessageUtils.log(Bukkit.getConsoleSender(), "Invalid layout template for Layout \"" + name + "\". Skipping. . .", LogLevel.WARN);
+        if (templateConfig != null) {
+            for (String name : templateConfig.getKeys(false)) {
+                ConfigurationSection namedSection = templateConfig.getConfigurationSection(name);
+                if (namedSection != null) {
+                    try {
+                        Layout.deserialize(namedSection, true);
+                        count++;
+                    } catch (InvalidConfigurationException e) {
+                        MessageUtils.log(Bukkit.getConsoleSender(), "Invalid layout template for Layout \"" + name + "\". Skipping. . .", LogLevel.WARN);
+                    }
                 }
             }
         }
-        String defaultLayoutName = mainConfig.getConfig().getString("defaultConfig");
+        String defaultLayoutName = mainConfig.getConfig().getString("default_layout");
         if (defaultLayoutName != null) {
             Layout defaultLayout = Layout.getLayout(defaultLayoutName);
             if (defaultLayout != null) {
@@ -67,24 +72,29 @@ public final class TowerDefense extends JavaPlugin {
                 MessageUtils.log(Bukkit.getConsoleSender(), "Invalid default layout \"" + defaultLayoutName + "\" in config", LogLevel.ERROR);
             }
         }
-        MessageUtils.log(Bukkit.getConsoleSender(), "Successfully loaded " + count + " layout templates", LogLevel.SUCCESS);
+        MessageUtils.log(Bukkit.getConsoleSender(), "Loaded " + count + " layout templates", LogLevel.SUCCESS);
+
+        // Load tower templates
+        ConfigurationSection towerConfig = towerTemplates.getConfig();
+        if (towerConfig != null) {
+            Towers.deserialize(towerConfig);
+        }
+        MessageUtils.log(Bukkit.getConsoleSender(), "Loaded " + Towers.getTowers().size() + " tower templates", LogLevel.SUCCESS);
     }
 
     @Override
     public void onDisable() {
-        // Save layouts
-        if (layoutTemplates.getFile().delete()) {
-            try {
-                //noinspection ResultOfMethodCallIgnored
-                layoutTemplates.getFile().createNewFile();
-            } catch (IOException e) {
-                MessageUtils.log(Bukkit.getConsoleSender(), "IO error whilst deleting contents of layout config", LogLevel.CRITICAL);
-            }
-        }
+        // Close any open editors
+        MeshEditor.closeAll();
+
+        // Save configs
+        mainConfig.save();
         ConfigurationSection layoutConfig = layoutTemplates.getConfig();
         for (Layout layout : Layout.getLayouts()) {
             layout.serialize(layoutConfig);
         }
-        MessageUtils.log(Bukkit.getConsoleSender(), "Saved " + Layout.getLayouts().size() + " layout templates", LogLevel.SUCCESS);
+        layoutTemplates.save();
+        Towers.serialize(towerTemplates.getConfig());
+        towerTemplates.save();
     }
 }

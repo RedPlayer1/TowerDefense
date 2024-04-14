@@ -2,6 +2,7 @@ package me.redplayer_1.towerdefense.Util;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,6 +28,13 @@ public final class MessageUtils {
      */
     public static void log(CommandSender target, String msg, LogLevel level) {
         target.sendRichMessage(level.format(msg));
+    }
+
+    /**
+     * @return the String representation of the Location
+     */
+    public static String locationToString(Location location) {
+        return "Location: " + location.x() + ", " + location.y() + ", " + location.z() + " in world \"" + location.getWorld() + "\"";
     }
 
     public static Component asMiniMessage(String text) {

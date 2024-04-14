@@ -2,14 +2,12 @@ package me.redplayer_1.towerdefense.Plot.Layout;
 
 import me.redplayer_1.towerdefense.Exception.NodeOutOfBoundsException;
 import me.redplayer_1.towerdefense.Plot.Direction;
-import me.redplayer_1.towerdefense.TowerDefense;
 import me.redplayer_1.towerdefense.Util.BlockMesh;
 import me.redplayer_1.towerdefense.Util.ItemUtils;
 import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -30,13 +28,12 @@ import java.util.LinkedList;
 public class LayoutEditor {
     private static final Material PLATFORM_BASE = Material.STONE_BRICKS;
     private static HashMap<Player, LayoutEditor> openEditors = new HashMap<>();
-    private static final ItemStack[] toolInventory = new ItemStack[4];
-    static {
-        toolInventory[0] = ItemUtils.create("Left", Material.STICK);
-        toolInventory[1] = ItemUtils.create("Forward", Material.STICK);
-        toolInventory[2] = ItemUtils.create("Right", Material.STICK);
-        toolInventory[3] = ItemUtils.create("Delete", Material.RED_DYE);
-    }
+    private static final ItemStack[] toolInventory = {
+            ItemUtils.create("Left", Material.STICK),
+            ItemUtils.create("Forward", Material.STICK),
+            ItemUtils.create("Right", Material.STICK),
+            ItemUtils.create("Delete", Material.RED_DYE)
+    };
 
     private final Player player;
     private final @Nullable String name; // only set if the editor is editing an existing layout

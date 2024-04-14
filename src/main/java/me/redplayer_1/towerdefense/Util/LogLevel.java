@@ -10,13 +10,13 @@ public enum LogLevel {
      */
     SUCCESS("<dark_green><b>✓</b></dark_green> <green>", "</green>"),
     /**
-     * Send text; no significance
+     * An operation needs to notify the sender of important information
      */
-    NORMAL("<gray><i>", "<i></gray>"),
+    NOTICE("<gold><b>!</b><dark_gray> ", "</dark_gray>"),
     /**
      * An operation encountered a recoverable error
      */
-    WARN("<gold>Warning: <yellow>", "</yellow></gold>"),
+    WARN("<gold>⚠</gold> <yellow>", "</yellow>"),
     /**
      * An operation encountered an unrecoverable error
      */
@@ -24,7 +24,7 @@ public enum LogLevel {
     /**
      * An operation encountered a severe unrecoverable error that must be resolved
      */
-    CRITICAL("<dark_red>✖ <b>CRITICAL</b> ✖", "</dark_red>");
+    CRITICAL("<dark_red>✖ <b>CRITICAL</b> ✖ ", "</dark_red>");
 
     private final String prefix;
     private final String postfix;

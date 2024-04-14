@@ -11,7 +11,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 
 public class Config {
-    private FileConfiguration fileConfig;
+    private YamlConfiguration fileConfig;
     private File file;
 
     /**
@@ -21,12 +21,11 @@ public class Config {
      * @param fileName the name of the file (without the postfix)
      */
     public Config(String fileName) throws IOException, InvalidConfigurationException {
-        new Config(new File(TowerDefense.INSTANCE.getDataFolder().getPath() + "/" + fileName + ".yml"));
+        this(new File(TowerDefense.INSTANCE.getDataFolder().getPath() + "/" + fileName + ".yml"));
     }
 
     public Config(File configFile) throws IOException, InvalidConfigurationException {
         file = configFile;
-
         if (!file.exists()) {
             file.getParentFile().mkdirs();
             InputStream inputStream = Config.class.getClassLoader().getResourceAsStream(file.getName());
@@ -36,14 +35,14 @@ public class Config {
                 file.createNewFile();
             }
         }
-        fileConfig = new YamlConfiguration();
-        fileConfig.load(file);
+
+        fileConfig = YamlConfiguration.loadConfiguration(file);
     }
 
     /**
      * @return The {@link FileConfiguration} for this Config
      */
-    public FileConfiguration getConfig() {
+    public YamlConfiguration getConfig() {
         return fileConfig;
     }
 

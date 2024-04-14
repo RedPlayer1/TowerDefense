@@ -2,6 +2,7 @@ package me.redplayer_1.towerdefense.Command;
 
 import me.redplayer_1.towerdefense.Plot.Plot;
 import me.redplayer_1.towerdefense.TDPlayer;
+import me.redplayer_1.towerdefense.Util.LocationUtils;
 import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Bukkit;
@@ -19,7 +20,7 @@ import java.util.List;
  */
 public class PlotCommand extends Command {
     private static final List<String> NORMAL_ARGS = List.of("help");
-    private static final List<String> PRIVILEGED_ARGS = List.of("manage", "size", "resize", "origin", "setOrigin");
+    private static final List<String> PRIVILEGED_ARGS = List.of("help", "manage", "size", "resize", "origin", "setOrigin");
     private static final String NORMAL_HELP_MSG =
             MessageUtils.helpEntry("/plot", null, "teleport to your plot") + '\n'
             + MessageUtils.helpEntry("/plot", "<player>", "teleport to a player's plot") + '\n'
@@ -69,7 +70,7 @@ public class PlotCommand extends Command {
                 }
                 case "origin" -> {
                     if (Plot.getGridOrigin() != null) {
-                        MessageUtils.log(player, Plot.getGridOrigin().toString(), LogLevel.SUCCESS);
+                        MessageUtils.log(player, MessageUtils.locationToString(Plot.getGridOrigin()), LogLevel.SUCCESS);
                     } else {
                         MessageUtils.log(player, "The plot origin isn't set", LogLevel.WARN);
                     }

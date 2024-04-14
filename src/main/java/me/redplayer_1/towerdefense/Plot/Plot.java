@@ -163,8 +163,10 @@ public class Plot {
         for (int y = 0; y < plotGridSize; y++) {
             for (int x = 0; x < plotGridSize; x++) {
                 Plot plot = plots[y][x];
-                plot.layout.remove();
-                plot.layout.place(plot.getBottomLeft());
+                if (plot != null) {
+                    plot.layout.remove();
+                    plot.layout.place(plot.getBottomLeft());
+                }
             }
         }
     }

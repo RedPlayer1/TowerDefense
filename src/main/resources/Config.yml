@@ -4,13 +4,3 @@ empty_plot_filler_type: "STONE_BRICKS"
 # world that the plot grid is located in
 plot_world: "world"
 
-# NO MANUAL EDITING
-meshes:
-  "testmesh":
-    location: "worldUID::x::y::z"
-    width: 1
-    depth: 5
-    height: 3
-    blocks:
-      - STONE_BRICK
-      - TALL_GRASS
