@@ -68,7 +68,6 @@ public class Plot {
             this.layout = layout;
         }
 
-        // FIXME: alternate method? plots[usedPlots % plotGridSize**2][usedPlots - (usedPlots % plotGridSize**2)]
         for (int y = 0; y < plotGridSize; y++) {
             for (int x = 0; x < plotGridSize; x++) {
                 if (plots[y][x] != null) {
@@ -139,27 +138,33 @@ public class Plot {
      * Serialize the plot within a ConfigurationSection
      */
     public void serialize(ConfigurationSection section) {
-        // serialize Layout
+        section.set("layout", layout.getName());
     }
 
+    /**
+     * Deserialize a plot from the ConfigurationSection
+     * @param section the section containing the serialized plot
+     * @return the deserialized plot
+     * @throws NotEnoughPlotSpaceException if the new plot cannot be created because there isn't enough room in the grid
+     * @throws NoLayoutFoundException if the plot's layout doesn't exist or if the config value is missing
+     */
     public static Plot deserialize(ConfigurationSection section) throws NotEnoughPlotSpaceException, NoLayoutFoundException {
-        Plot plot = new Plot();
-        return plot;
+        String layoutName = section.getString("layout");
+        if (layoutName == null) throw new NoLayoutFoundException("Layout name isn't in the config");
+        Layout plotLayout =  Layout.getLayout(layoutName);
+        if (plotLayout == null) throw new NoLayoutFoundException("No layout named \"" + layoutName + "\" exists");
+        return new Plot(plotLayout);
     }
 
     public static void setPlotGridOrigin(Location origin) {
         gridOrigin = origin;
 
         // remove all player towers & plot/layout blocks, then place them according to the new origin
-        /*for (Plot[] plotArray : plots) {
-            for (Plot plot : plotArray) {
-                plot.layout.remove();
-                plot.layout.place();
-            }
-        }         */
         for (int y = 0; y < plotGridSize; y++) {
             for (int x = 0; x < plotGridSize; x++) {
-
+                Plot plot = plots[y][x];
+                plot.layout.remove();
+                plot.layout.place(plot.getBottomLeft());
             }
         }
     }
@@ -180,9 +185,7 @@ public class Plot {
         plotGridSize = size;
         Plot[][] newPlots = new Plot[plotGridSize][plotGridSize];
         for (int y = 0; y < plots.length; y++) {
-            for (int x = 0; x < plots.length; x++) {
-                newPlots[y][x] = plots[y][x];
-            }
+            System.arraycopy(plots[y], 0, newPlots[y], 0, plots.length);
         }
         plots = newPlots;
     }

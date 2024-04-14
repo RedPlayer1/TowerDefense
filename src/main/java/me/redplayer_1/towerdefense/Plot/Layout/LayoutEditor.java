@@ -30,7 +30,6 @@ import java.util.LinkedList;
 public class LayoutEditor {
     private static final Material PLATFORM_BASE = Material.STONE_BRICKS;
     private static HashMap<Player, LayoutEditor> openEditors = new HashMap<>();
-    private static final NamespacedKey KEY = new NamespacedKey(TowerDefense.INSTANCE, "layoutitem");
     private static final ItemStack[] toolInventory = new ItemStack[4];
     static {
         toolInventory[0] = ItemUtils.create("Left", Material.STICK);
@@ -96,7 +95,7 @@ public class LayoutEditor {
 
     private void placeBottomPlatform(Player player) {
         bottomPlatform = new BlockMesh(Layout.SIZE, Layout.SIZE, 1);
-        bottomPlatform.fillMesh(Material.STONE_BRICKS);
+        bottomPlatform.fillMesh(PLATFORM_BASE);
         // TODO: error handling if player isn't within build limits (-64 to 320 (overworld))
         bottomPlatform.place(player.getLocation().subtract(0, 2, 0));
     }
