@@ -2,10 +2,7 @@ package me.redplayer_1.towerdefense.Plot.Layout;
 
 import me.redplayer_1.towerdefense.Exception.NodeOutOfBoundsException;
 import me.redplayer_1.towerdefense.Plot.Direction;
-import me.redplayer_1.towerdefense.Util.BlockMesh;
-import me.redplayer_1.towerdefense.Util.ItemUtils;
-import me.redplayer_1.towerdefense.Util.LogLevel;
-import me.redplayer_1.towerdefense.Util.MessageUtils;
+import me.redplayer_1.towerdefense.Util.*;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -75,6 +72,10 @@ public class LayoutEditor {
         player.getInventory().setContents(toolInventory);
         path = new LinkedList<>();
         placedNodes = new LinkedList<>();
+        placeBottomPlatform(player);
+        placementArea = template.getMesh();
+        placementArea.place(player.getLocation().subtract(0, 1, 0));
+        setStartLoc(placementArea.fromRelativeLocation(template.getStartLocation()));
         for (Direction dir : template.getPath()) {
             try {
                 addNode(dir);
@@ -83,10 +84,6 @@ public class LayoutEditor {
                 break;
             }
         }
-        placeBottomPlatform(player);
-        placementArea = template.getMesh();
-        placementArea.place(player.getLocation().subtract(0, 1, 0));
-        startLoc = template.getStartLocation();
         openEditors.put(player, this);
     }
 
@@ -113,6 +110,7 @@ public class LayoutEditor {
             };
             currentNodeLoc = direction.getFromLocation(currentNodeLoc, 1);
         }
+        MessageUtils.log(player, "node: r=" + placementArea.toRelativeLocation(currentNodeLoc) + " a=" + MessageUtils.locationToString(currentNodeLoc), LogLevel.DEBUG);
         if (!placementArea.contains(currentNodeLoc)) {
             currentNodeLoc = direction.getFromLocation(currentNodeLoc, -1);
             throw new NodeOutOfBoundsException();
@@ -158,7 +156,11 @@ public class LayoutEditor {
      */
     public @Nullable Layout save(String name) {
         if (startLoc == null) return null;
-        return new Layout(name, startLoc, close(), path.toArray(new Direction[0]), true);
+        if (name != null) Layout.removeLayout(name);
+        //Vector3 relLoc = Vector3.of(startLoc.subtract(placementArea.getBottomLeft()));
+        Vector3 relLoc = placementArea.toRelativeLocation(startLoc);
+        MessageUtils.log(player, "RlLoc @ save: " + relLoc, LogLevel.DEBUG);
+        return new Layout(name, relLoc, close(), path.toArray(new Direction[0]), true);
     }
 
     /**
@@ -181,11 +183,11 @@ public class LayoutEditor {
     }
 
     /**
-     * Sets the starting location for the layout. Existing nodes will be invalidated and cleared.
-     * @param startLoc the new start location
+     * Sets the starting location for the layout (placementArea must be placed). Existing nodes will be invalidated and cleared.
+     * @param location the start location
      */
-    public void setStartLoc(Location startLoc) {
-        this.startLoc = startLoc;
+    public void setStartLoc(Location location) {
+        this.startLoc = location;
         currentNodeLoc = startLoc;
         path.clear();
         for (Entity node : placedNodes) {
@@ -225,6 +227,7 @@ public class LayoutEditor {
             if (editor == null) return;
             ItemStack item = event.getPlayer().getInventory().getItemInMainHand();
             Block block = event.getClickedBlock();
+            MessageUtils.log(p, "event call", LogLevel.DEBUG);
 
             if (editor.path.isEmpty()) {
                 // no nodes placed, set starting node to clicked block
@@ -238,7 +241,7 @@ public class LayoutEditor {
                         case WEST, WEST_SOUTH_WEST, WEST_NORTH_WEST -> Direction.WEST;
                         case UP, DOWN, SELF -> null; // player facing will always be an ordinal direction
                     };
-                    editor.setStartLoc(block.getLocation());
+                    editor.setStartLoc(block.getLocation().clone());
                     try {
                         editor.addNode(dir);
                         MessageUtils.log(p, "Set starting location", LogLevel.SUCCESS);
@@ -271,7 +274,7 @@ public class LayoutEditor {
                         MessageUtils.log(editor.player, "<red>Removed last node.</red>", LogLevel.SUCCESS);
                     }
                 } else {
-                    MessageUtils.log(p, "Use the inventory tools to modify the layout", LogLevel.ERROR);
+                    //MessageUtils.log(p, "Use the inventory tools to modify the layout", LogLevel.ERROR);
                     return;
                 }
                 return;

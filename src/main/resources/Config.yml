@@ -1,6 +1,12 @@
 # block type used to fill empty plots
 empty_plot_filler_type: "STONE_BRICKS"
 
-# world that the plot grid is located in
-plot_world: "world"
+# location of the plot grid's origin
+plot_grid_origin:
 
+# size of the length of the (square) plot grid
+# (ex. size 10 == 10x10 grid == 100 plots)
+plot_grid_size: 10
+
+# the default layout to use when creating a plot
+default_layout:

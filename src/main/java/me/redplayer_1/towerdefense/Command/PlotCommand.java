@@ -88,7 +88,7 @@ public class PlotCommand extends Command {
                             );
                             Plot.setPlotGridOrigin(newOrigin);
                             MessageUtils.log(player,
-                                    "New plot grid origin is " + args[1] + ' ' + args[2] + ' ' + args[3] + " in world " + newOrigin.getWorld().getName(),
+                                    "New plot grid origin is " + MessageUtils.locationToString(newOrigin),
                                     LogLevel.SUCCESS);
                         } catch (NumberFormatException e) {
                             MessageUtils.log(player, "Origin x, y, and z must be integers", LogLevel.ERROR);

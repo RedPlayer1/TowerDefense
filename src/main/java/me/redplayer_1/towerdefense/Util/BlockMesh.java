@@ -1,7 +1,5 @@
 package me.redplayer_1.towerdefense.Util;
 
-import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -70,7 +68,6 @@ public class BlockMesh {
      * @param bottomLeft the location of the bottom left corner of the placement
      */
     public void place(Location bottomLeft) {
-        Bukkit.broadcast(Component.text("blockmesh#place@" + bottomLeft));
         this.bottomLeft = bottomLeft;
         forEachBlock(bottomLeft, (loc, rel) ->
                 loc.getWorld().setType(loc, mesh[rel.y][rel.z][rel.x])
@@ -111,11 +108,11 @@ public class BlockMesh {
      */
     public void forEachBlock(Location bottomLeft, BiConsumer<Location, Vector3> action) {
         final int maxY = bottomLeft.getBlockY() + height;
-        final int maxZ = bottomLeft.getBlockZ() + depth;
+        final int maxZ = bottomLeft.getBlockZ() - depth;
         final int maxX = bottomLeft.getBlockX() + width;
 
         for (int y = bottomLeft.getBlockY(), relY = 0; y < maxY; y++, relY++) {
-            for (int z = bottomLeft.getBlockZ(), relZ = 0; z < maxZ; z++, relZ++) {
+            for (int z = bottomLeft.getBlockZ(), relZ = 0; z > maxZ; z--, relZ++) {
                 for (int x = bottomLeft.getBlockX(), relX = 0; x < maxX; x++, relX++) {
                     action.accept(new Location(bottomLeft.getWorld(), x, y, z), new Vector3(relX, relY, relZ));
                 }
@@ -149,12 +146,43 @@ public class BlockMesh {
      */
     public boolean contains(Location location) {
         if (bottomLeft == null) return false;
-        Vector3 tr = Vector3.of(bottomLeft).add(width, height, depth - 1);
+        Vector3 tr = Vector3.of(bottomLeft).add(width - 1, height - 1, -depth + 1);
         Vector3 bl = Vector3.of(bottomLeft);
+        Vector3 loc = Vector3.of(location);
+        /*
         return location.getWorld() == bottomLeft.getWorld()
-                && location.x() >= bl.x && location.x() <= tr.x
-                && location.y() >= bl.y && location.y() <= tr.y
-                && location.z() >= bl.z && location.z() <= tr.z;
+                && location.getBlockX() >= bl.x && location.getBlockX() <= tr.x
+                && location.getBlockY() >= bl.y && location.getBlockY() <= tr.y
+                && location.getBlockZ() <= bl.z && location.getBlockZ() >= tr.z;
+         */
+        boolean xCheck = loc.x >= bl.x && loc.x <= tr.x;
+        boolean yCheck = loc.y >= bl.y && loc.y <= tr.y;
+        boolean zCheck = loc.z >= tr.z && loc.z <= bl.z;;
+        System.out.println("x? " + xCheck + " y? " + yCheck + " z? " + zCheck);
+        return location.getWorld() == bottomLeft.getWorld()
+                && xCheck
+                && yCheck
+                && zCheck;
+    }
+
+    /**
+     * @return the location's location relative to the mesh's bottom-left coordinate. returns null if mesh isn't placed
+     */
+    public @Nullable Vector3 toRelativeLocation(Location location) {
+        if (bottomLeft == null) return null;
+        return new Vector3(location.getBlockX() - bottomLeft.getBlockX(),
+                location.getBlockY() - bottomLeft.getBlockY(),
+                bottomLeft.getBlockZ() - location.getBlockZ());
+    }
+
+    public @Nullable Location fromRelativeLocation(Vector3 rel) {
+        if (bottomLeft == null) return null;
+        return new Location(
+                null,
+                bottomLeft.getBlockX() + rel.x,
+                bottomLeft.getBlockY() + rel.y,
+                bottomLeft.getBlockZ() - rel.z
+        );
     }
 
     /**

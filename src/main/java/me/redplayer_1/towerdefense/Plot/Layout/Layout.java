@@ -2,9 +2,10 @@ package me.redplayer_1.towerdefense.Plot.Layout;
 
 import me.redplayer_1.towerdefense.Exception.NoLayoutFoundException;
 import me.redplayer_1.towerdefense.Plot.Direction;
-import me.redplayer_1.towerdefense.Util.BlockMesh;
-import me.redplayer_1.towerdefense.Util.LocationUtils;
+import me.redplayer_1.towerdefense.Util.*;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.jetbrains.annotations.Nullable;
@@ -19,7 +20,8 @@ public class Layout {
 
     private final boolean isTemplate;
     private final String name;
-    private final Location startLoc;
+    private @Nullable World world; // null if template
+    private final Vector3 startLoc; // relative to bottomLeft
     private final BlockMesh mesh;
     private final Direction[] path;
     private LinkedList<Enemy> enemies;
@@ -27,8 +29,9 @@ public class Layout {
     private float enemyTickRate; // -1 = n/a (layout is a template)
 
     // creates new layout & adds it as a template (enemies, level, & towers uninitialized)
-    protected Layout(String name, Location startLoc, BlockMesh mesh, Direction[] path, boolean isTemplate) {
+    protected Layout(String name, Vector3 startLoc, BlockMesh mesh, Direction[] path, boolean isTemplate) {
         this.name = name;
+        world = null;
         this.startLoc = startLoc;
         this.mesh = mesh;
         this.path = path;
@@ -44,7 +47,7 @@ public class Layout {
             if (l.name.equals(name)) layout = l;
         }
         if (layout == null) throw new NoLayoutFoundException();
-
+        world = null;
         isTemplate = false;
         this.name = layout.name;
         startLoc = layout.startLoc;
@@ -81,6 +84,7 @@ public class Layout {
      * @param bottomLeft the bottom-left coordinate of the plot placement (-x, +z)
      */
     public void place(Location bottomLeft) {
+        world = bottomLeft.getWorld();
         mesh.place(bottomLeft);
     }
 
@@ -99,7 +103,7 @@ public class Layout {
         return mesh;
     }
 
-    public Location getStartLocation() {
+    public Vector3 getStartLocation() {
         return startLoc;
     }
 
@@ -147,7 +151,7 @@ public class Layout {
      */
     public void serialize(ConfigurationSection rootSection) {
         ConfigurationSection section = rootSection.createSection(name);
-        LocationUtils.serialize(startLoc, section, "startLoc");
+        startLoc.serialize(rootSection.createSection("startLoc"));
         mesh.serialize(section, "blockMesh");
         section.set("path", Arrays.stream(path).map(Enum::name).toList());
         section.set("tickRate", enemyTickRate);
@@ -166,7 +170,7 @@ public class Layout {
         }
         Layout layout = new Layout(
                 section.getName(),
-                LocationUtils.deserialize(section.getConfigurationSection("startLoc")),
+                Vector3.deserialize(section.getConfigurationSection("startLoc")),
                 BlockMesh.deserialize(section.getConfigurationSection("blockMesh")),
                 section.getStringList("path").stream().map(Direction::valueOf).toArray(Direction[]::new),
                 makeTemplate
@@ -175,5 +179,44 @@ public class Layout {
             layout.enemyTickRate = Float.parseFloat(section.getString("tickRate", "0"));
         }
         return layout;
+    }
+
+    /**
+     * Load all optional config values
+     * @param section the ConfigurationSection containing the values
+     */
+    public static void loadConfigValues(ConfigurationSection section) {
+        String defaultLayoutName = section.getString("default_layout");
+        if (defaultLayoutName != null) {
+            Layout defaultLayout = Layout.getLayout(defaultLayoutName);
+            if (defaultLayout != null) {
+                Layout.defaultLayout = defaultLayout;
+            } else {
+                MessageUtils.log(Bukkit.getConsoleSender(), "Invalid default layout \"" + defaultLayoutName + "\" in config", LogLevel.ERROR);
+            }
+        }
+    }
+
+    public static void saveConfigValues(ConfigurationSection section) {
+        if (defaultLayout != null) {
+            section.set("default_layout", defaultLayout.getName());
+        }
+    }
+
+    /**
+     * Load a list of layout templates from a configuration section
+     * @param section the section containing the values
+     */
+    public static void loadLayoutTemplates(ConfigurationSection section) {
+        for (String name : section.getKeys(false)) {
+            ConfigurationSection namedSection = section.getConfigurationSection(name);
+            if (namedSection != null) {
+                try {
+                    Layout.deserialize(namedSection, true);
+                } catch (InvalidConfigurationException e) {
+                    MessageUtils.log(Bukkit.getConsoleSender(), "Invalid layout template for Layout \"" + name + "\". Skipping. . .", LogLevel.WARN);
+                }
+            }
+        }
     }
 }

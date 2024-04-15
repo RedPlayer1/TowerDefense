@@ -2,6 +2,7 @@ package me.redplayer_1.towerdefense.Util;
 
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -67,6 +68,11 @@ public class Vector3 {
         return new Location(world, x, y, z);
     }
 
+    @Override
+    public String toString() {
+        return "Vector3: (" + x + ", " + y + ", " + z + ")";
+    }
+
     /**
      * Creates a vector representation of the location
      * @param location the location to convert
@@ -74,5 +80,19 @@ public class Vector3 {
      */
     public static Vector3 of(Location location) {
         return new Vector3(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+    }
+
+    public void serialize(ConfigurationSection section) {
+        section.set("x", x);
+        section.set("y", y);
+        section.set("z", z);
+    }
+
+    public static Vector3 deserialize(ConfigurationSection section) {
+        return new Vector3(
+                section.getInt("x"),
+                section.getInt("y"),
+                section.getInt("z")
+        );
     }
 }

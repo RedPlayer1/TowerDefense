@@ -2,13 +2,16 @@ package me.redplayer_1.towerdefense;
 
 import me.redplayer_1.towerdefense.Command.LayoutCommand;
 import me.redplayer_1.towerdefense.Command.PlotCommand;
+import me.redplayer_1.towerdefense.Command.TowerCommand;
 import me.redplayer_1.towerdefense.Plot.Layout.Layout;
 import me.redplayer_1.towerdefense.Plot.Layout.LayoutEditor;
 import me.redplayer_1.towerdefense.Plot.Layout.Towers;
+import me.redplayer_1.towerdefense.Plot.Plot;
 import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MeshEditor;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.command.CommandMap;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -41,44 +44,23 @@ public final class TowerDefense extends JavaPlugin {
         CommandMap commandMap = Bukkit.getCommandMap();
         commandMap.register("layout", new LayoutCommand());
         commandMap.register("plot", new PlotCommand());
+        commandMap.register("tower", new TowerCommand());
 
         // Listeners
         PluginManager pluginManager = getServer().getPluginManager();
         pluginManager.registerEvents(new EventListener(), this);
         pluginManager.registerEvents(new LayoutEditor.EventListener(), this);
 
+        // Load apply main config values
+        Plot.loadConfigValues(mainConfig.getConfig());
+
         // Load layout templates
-        ConfigurationSection templateConfig = layoutTemplates.getConfig();
-        int count = 0;
-        if (templateConfig != null) {
-            for (String name : templateConfig.getKeys(false)) {
-                ConfigurationSection namedSection = templateConfig.getConfigurationSection(name);
-                if (namedSection != null) {
-                    try {
-                        Layout.deserialize(namedSection, true);
-                        count++;
-                    } catch (InvalidConfigurationException e) {
-                        MessageUtils.log(Bukkit.getConsoleSender(), "Invalid layout template for Layout \"" + name + "\". Skipping. . .", LogLevel.WARN);
-                    }
-                }
-            }
-        }
-        String defaultLayoutName = mainConfig.getConfig().getString("default_layout");
-        if (defaultLayoutName != null) {
-            Layout defaultLayout = Layout.getLayout(defaultLayoutName);
-            if (defaultLayout != null) {
-                Layout.defaultLayout = defaultLayout;
-            } else {
-                MessageUtils.log(Bukkit.getConsoleSender(), "Invalid default layout \"" + defaultLayoutName + "\" in config", LogLevel.ERROR);
-            }
-        }
-        MessageUtils.log(Bukkit.getConsoleSender(), "Loaded " + count + " layout templates", LogLevel.SUCCESS);
+        Layout.loadLayoutTemplates(layoutTemplates.getConfig());
+        Layout.loadConfigValues(mainConfig.getConfig());
+        MessageUtils.log(Bukkit.getConsoleSender(), "Loaded " + Layout.getLayouts().size() + " layout templates", LogLevel.SUCCESS);
 
         // Load tower templates
-        ConfigurationSection towerConfig = towerTemplates.getConfig();
-        if (towerConfig != null) {
-            Towers.deserialize(towerConfig);
-        }
+        Towers.deserialize(towerTemplates.getConfig());
         MessageUtils.log(Bukkit.getConsoleSender(), "Loaded " + Towers.getTowers().size() + " tower templates", LogLevel.SUCCESS);
     }
 
@@ -88,13 +70,15 @@ public final class TowerDefense extends JavaPlugin {
         MeshEditor.closeAll();
 
         // Save configs
-        mainConfig.save();
+        Plot.saveConfigValues(mainConfig.getConfig());
+        Layout.saveConfigValues(mainConfig.getConfig());
         ConfigurationSection layoutConfig = layoutTemplates.getConfig();
         for (Layout layout : Layout.getLayouts()) {
             layout.serialize(layoutConfig);
         }
-        layoutTemplates.save();
         Towers.serialize(towerTemplates.getConfig());
+        mainConfig.save();
+        layoutTemplates.save();
         towerTemplates.save();
     }
 }

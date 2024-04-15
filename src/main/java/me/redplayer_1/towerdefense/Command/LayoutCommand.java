@@ -122,7 +122,7 @@ public class LayoutCommand extends Command {
                     // send current default layout
                     if (Layout.defaultLayout != null) {
                         MessageUtils.log(player,
-                                "The default layout is <white><i>" + Layout.defaultLayout.getName() + "</i></white",
+                                "The default layout is <white><i>" + Layout.defaultLayout.getName() + "</i></white>",
                                 LogLevel.SUCCESS
                         );
                     } else {

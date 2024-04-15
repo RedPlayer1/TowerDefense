@@ -34,7 +34,8 @@ public final class MessageUtils {
      * @return the String representation of the Location
      */
     public static String locationToString(Location location) {
-        return "Location: " + location.x() + ", " + location.y() + ", " + location.z() + " in world \"" + location.getWorld() + "\"";
+        return "Location: " + location.x() + ", " + location.y() + ", " + location.z() +
+                " in world \"" + (location.getWorld() != null? location.getWorld().getName() : "null") + "\"";
     }
 
     public static Component asMiniMessage(String text) {

@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.UUID;
 
 public class TDPlayer {
     private static final String PLAYER_DATA_DIRECTORY = TowerDefense.INSTANCE.getDataFolder().getPath() + "/playerdata/";
@@ -103,7 +104,7 @@ public class TDPlayer {
     public static TDPlayer deserialize(Config config) throws NotEnoughPlotSpaceException, NoLayoutFoundException {
         FileConfiguration fConfig = config.getConfig();
         TDPlayer player = new TDPlayer(
-                Bukkit.getPlayer(config.getFile().getName().replace(".yml", "")),
+                Bukkit.getPlayer(UUID.fromString(config.getFile().getName().replace(".yml", ""))),
                 false
         );
         try {

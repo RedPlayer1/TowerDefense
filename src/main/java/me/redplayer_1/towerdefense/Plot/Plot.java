@@ -3,7 +3,12 @@ package me.redplayer_1.towerdefense.Plot;
 import me.redplayer_1.towerdefense.Exception.NoLayoutFoundException;
 import me.redplayer_1.towerdefense.Exception.NotEnoughPlotSpaceException;
 import me.redplayer_1.towerdefense.Plot.Layout.Layout;
+import me.redplayer_1.towerdefense.TowerDefense;
 import me.redplayer_1.towerdefense.Util.BlockMesh;
+import me.redplayer_1.towerdefense.Util.LocationUtils;
+import me.redplayer_1.towerdefense.Util.LogLevel;
+import me.redplayer_1.towerdefense.Util.MessageUtils;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -11,6 +16,8 @@ import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.UUID;
 
 /**
  * A square area (width & length = Layout.SIZE, y is undefined) consisting of a bottom layer of filler blocks, then
@@ -22,16 +29,16 @@ import org.jetbrains.annotations.Nullable;
  */
 public class Plot {
     private static int plotGridSize = 10;
+    private static Material emptyPlotFillerType = Material.STONE_BRICKS;
     private static final BlockMesh EMPTY_PLOT_MESH = new BlockMesh(Layout.SIZE, Layout.SIZE, 1);
     static {
-        EMPTY_PLOT_MESH.fillMesh(Material.STONE_BRICKS); // TODO: make config value
+        EMPTY_PLOT_MESH.fillMesh(emptyPlotFillerType);
     }
-    private static final World PLOT_WORLD = Bukkit.getWorld("world"); //TODO: make config value
     private static Plot[][] plots = new Plot[plotGridSize][plotGridSize]; // [y][x]
-    private static Location gridOrigin = null; // (0, 0) in relative coordinates TODO: make config value
+    private static Location gridOrigin = null; // (0, 0) in relative coordinates
     private static int usedPlots = 0;
 
-    private Layout layout;
+    private Layout layout = null;
     private int x;
     private int y;
 
@@ -64,8 +71,6 @@ public class Plot {
             } else {
                 this.layout = Layout.defaultLayout;
             }
-        } else {
-            this.layout = layout;
         }
 
         for (int y = 0; y < plotGridSize; y++) {
@@ -77,6 +82,12 @@ public class Plot {
                     plots[y][x] = this;
                 }
             }
+        }
+        Bukkit.broadcast(Component.text("NEW PLOT CREATE w/ Layout " + (this.layout != null? this.layout.getName() : "null")));
+        if (this.layout == null) {
+            EMPTY_PLOT_MESH.place(getBottomLeft());
+        } else {
+            this.layout.place(getBottomLeft());
         }
     }
 
@@ -97,6 +108,7 @@ public class Plot {
     public void clear(boolean clearBlocks) {
         plots[y][x] = null;
         if (clearBlocks) {
+            layout.remove();
             EMPTY_PLOT_MESH.setBottomLeft(getBottomLeft());
             EMPTY_PLOT_MESH.destroy();
         }
@@ -120,7 +132,7 @@ public class Plot {
      * @return the bottom left coordinate of the plot
      */
     public Location getBottomLeft() {
-        return new Location(PLOT_WORLD, x * Layout.SIZE, gridOrigin.getBlockY(), y * Layout.SIZE);
+        return new Location(gridOrigin.getWorld(), x * Layout.SIZE, gridOrigin.getBlockY(), y * Layout.SIZE);
     }
 
     /**
@@ -190,6 +202,45 @@ public class Plot {
             System.arraycopy(plots[y], 0, newPlots[y], 0, plots.length);
         }
         plots = newPlots;
+    }
+
+    public static void setEmptyPlotFillerType(Material type) {
+        emptyPlotFillerType = type;
+        EMPTY_PLOT_MESH.fillMesh(type);
+    }
+
+    public static void loadConfigValues(ConfigurationSection section) {
+        String filler_type = section.getString("empty_plot_filler_type");
+        ConfigurationSection grid_origin = section.getConfigurationSection("plot_grid_origin");
+        int size = section.getInt("plot_grid_size");
+
+        if (filler_type != null) {
+            try {
+                Material material = Material.valueOf(filler_type);
+                Plot.setEmptyPlotFillerType(material);
+            } catch (IllegalArgumentException e) {
+                MessageUtils.log(Bukkit.getConsoleSender(), "Bad material name for \"empty_plot_filler_type\" in Config.yml", LogLevel.WARN);
+            }
+        }
+        if (grid_origin != null) {
+            Bukkit.getScheduler().runTaskLater(TowerDefense.INSTANCE, () -> {
+                Location origin = LocationUtils.deserialize(grid_origin);
+                if (origin != null) {
+                    gridOrigin = origin;
+                } else {
+                    MessageUtils.log(Bukkit.getConsoleSender(), "Bad location data for \"grid_origin\" in Config.yml", LogLevel.WARN);
+                }
+            }, 10);
+        }
+        if (size != 0) {
+            resizePlotGrid(size);
+        }
+    }
+
+    public static void saveConfigValues(ConfigurationSection section) {
+        section.set("empty_plot_filler_type", emptyPlotFillerType.name());
+        LocationUtils.serialize(gridOrigin, section, "plot_grid_origin");
+        section.set("plot_grid_size", plotGridSize);
     }
 
     /**

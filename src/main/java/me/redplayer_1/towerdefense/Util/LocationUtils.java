@@ -5,6 +5,8 @@ import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.UUID;
+
 public class LocationUtils {
     /**
      * Serializes this location into values within a new child section
@@ -29,7 +31,7 @@ public class LocationUtils {
     public static @Nullable Location deserialize(ConfigurationSection locationSection) {
         try {
             return new Location(
-                    Bukkit.getWorld(locationSection.getString("world", "")),
+                    Bukkit.getWorld(UUID.fromString(locationSection.getString("world", ""))),
                     locationSection.getDouble("x"),
                     locationSection.getDouble("y"),
                     locationSection.getDouble("z")
