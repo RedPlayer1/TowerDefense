@@ -2,6 +2,7 @@ package me.redplayer_1.towerdefense.Util;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.jetbrains.annotations.Nullable;
@@ -158,7 +159,6 @@ public class BlockMesh {
         boolean xCheck = loc.x >= bl.x && loc.x <= tr.x;
         boolean yCheck = loc.y >= bl.y && loc.y <= tr.y;
         boolean zCheck = loc.z >= tr.z && loc.z <= bl.z;;
-        System.out.println("x? " + xCheck + " y? " + yCheck + " z? " + zCheck);
         return location.getWorld() == bottomLeft.getWorld()
                 && xCheck
                 && yCheck
@@ -175,10 +175,10 @@ public class BlockMesh {
                 bottomLeft.getBlockZ() - location.getBlockZ());
     }
 
-    public @Nullable Location fromRelativeLocation(Vector3 rel) {
+    public @Nullable Location fromRelativeLocation(Vector3 rel, @Nullable World world) {
         if (bottomLeft == null) return null;
         return new Location(
-                null,
+                world,
                 bottomLeft.getBlockX() + rel.x,
                 bottomLeft.getBlockY() + rel.y,
                 bottomLeft.getBlockZ() - rel.z

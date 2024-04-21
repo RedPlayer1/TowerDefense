@@ -75,9 +75,10 @@ public class LayoutEditor {
         placeBottomPlatform(player);
         placementArea = template.getMesh();
         placementArea.place(player.getLocation().subtract(0, 1, 0));
-        setStartLoc(placementArea.fromRelativeLocation(template.getStartLocation()));
+        setStartLoc(placementArea.fromRelativeLocation(template.getStartLocation(), player.getWorld()));
         for (Direction dir : template.getPath()) {
             try {
+                MessageUtils.log(player, "Add node w/ direction " + dir, LogLevel.SUCCESS);
                 addNode(dir);
             } catch (NodeOutOfBoundsException e) {
                 MessageUtils.log(player, "Layout \"" + name + "\" has a node with an invalid location. All subsequent nodes have been discarded.", LogLevel.WARN);
@@ -112,8 +113,9 @@ public class LayoutEditor {
         }
         MessageUtils.log(player, "node: r=" + placementArea.toRelativeLocation(currentNodeLoc) + " a=" + MessageUtils.locationToString(currentNodeLoc), LogLevel.DEBUG);
         if (!placementArea.contains(currentNodeLoc)) {
-            currentNodeLoc = direction.getFromLocation(currentNodeLoc, -1);
-            throw new NodeOutOfBoundsException();
+            MessageUtils.log(player, "^ is invalid", LogLevel.DEBUG);
+            //currentNodeLoc = direction.getFromLocation(currentNodeLoc, -1);
+            //throw new NodeOutOfBoundsException();
         }
         BlockDisplay node = (BlockDisplay) startLoc.getWorld().spawnEntity(
                 new Location(startLoc.getWorld(), currentNodeLoc.getBlockX(), currentNodeLoc.y() + .4, currentNodeLoc.getBlockZ()),
@@ -160,6 +162,7 @@ public class LayoutEditor {
         //Vector3 relLoc = Vector3.of(startLoc.subtract(placementArea.getBottomLeft()));
         Vector3 relLoc = placementArea.toRelativeLocation(startLoc);
         MessageUtils.log(player, "RlLoc @ save: " + relLoc, LogLevel.DEBUG);
+        MessageUtils.log(player, "PATH: " + path.toString(), LogLevel.DEBUG);
         return new Layout(name, relLoc, close(), path.toArray(new Direction[0]), true);
     }
 
@@ -282,7 +285,7 @@ public class LayoutEditor {
             try {
                 editor.addNode(dir); // automatically handles relative locations
                 p.playSound(p, Sound.BLOCK_NOTE_BLOCK_CHIME, 1, 1);
-                MessageUtils.log(p, "Placed node facing " + dir.name().toLowerCase() + ".", LogLevel.SUCCESS);
+                //MessageUtils.log(p, "Placed node facing " + dir.name().toLowerCase() + ".", LogLevel.SUCCESS);
             } catch (NodeOutOfBoundsException e) {
                 MessageUtils.log(p, "Didn't place node as it would be out of bounds", LogLevel.WARN);
             }
