@@ -102,14 +102,7 @@ public class LayoutEditor {
     public void addNode(Direction direction) throws NodeOutOfBoundsException {
         if (startLoc == null) throw new IllegalStateException("Cannot add a node without a start location");
         if (!path.isEmpty()) {
-            Direction prevDir = path.peekLast();
-            direction = switch (direction) {
-                case NORTH -> prevDir;
-                case WEST -> prevDir.left();
-                case EAST -> prevDir.right();
-                default -> throw new IllegalStateException("Cannot add a node facing south");
-            };
-            currentNodeLoc = direction.getFromLocation(currentNodeLoc, 1);
+            currentNodeLoc = direction.toLocation(currentNodeLoc, 1);
         }
         MessageUtils.log(player, "node: r=" + placementArea.toRelativeLocation(currentNodeLoc) + " a=" + MessageUtils.locationToString(currentNodeLoc), LogLevel.DEBUG);
         if (!placementArea.contains(currentNodeLoc)) {
@@ -145,7 +138,7 @@ public class LayoutEditor {
      */
     public void removeLastNode() {
         if (path.size() <= 1) return;
-        currentNodeLoc = path.removeLast().getFromLocation(currentNodeLoc, -1);
+        currentNodeLoc = path.removeLast().toLocation(currentNodeLoc, -1);
         placedNodes.removeLast().remove();
     }
 
