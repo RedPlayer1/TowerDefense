@@ -12,12 +12,9 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.UUID;
 
 /**
  * A square area (width & length = Layout.SIZE, y is undefined) consisting of a bottom layer of filler blocks, then
@@ -239,7 +236,9 @@ public class Plot {
 
     public static void saveConfigValues(ConfigurationSection section) {
         section.set("empty_plot_filler_type", emptyPlotFillerType.name());
-        LocationUtils.serialize(gridOrigin, section, "plot_grid_origin");
+        if (isPlotSpaceInitialized()) {
+            LocationUtils.serialize(gridOrigin, section, "plot_grid_origin");
+        }
         section.set("plot_grid_size", plotGridSize);
     }
 
