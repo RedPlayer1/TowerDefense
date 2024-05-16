@@ -2,7 +2,9 @@ package me.redplayer_1.towerdefense;
 
 import me.redplayer_1.towerdefense.Exception.NoLayoutFoundException;
 import me.redplayer_1.towerdefense.Exception.NotEnoughPlotSpaceException;
+import me.redplayer_1.towerdefense.Plot.Layout.LayoutEditor;
 import me.redplayer_1.towerdefense.Util.LogLevel;
+import me.redplayer_1.towerdefense.Util.MeshEditor;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -36,7 +38,19 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onLeave(PlayerQuitEvent event) {
-        TDPlayer tdPlayer = TDPlayer.of(event.getPlayer());
+        Player p = event.getPlayer();
+        // close any editors the player may have had open
+        LayoutEditor layoutEditor = LayoutEditor.getEditor(p);
+        if (layoutEditor != null) {
+            layoutEditor.close();
+        }
+        MeshEditor meshEditor = MeshEditor.getEditor(p);
+        if (meshEditor != null) {
+            meshEditor.close(false);
+        }
+
+        // save player data
+        TDPlayer tdPlayer = TDPlayer.of(p);
         if (tdPlayer != null) {
             tdPlayer.serialize();
         } else if (!TDPlayer.isPrivileged(event.getPlayer())){
