@@ -104,11 +104,8 @@ public class LayoutEditor {
         if (!path.isEmpty()) {
             currentNodeLoc = direction.toLocation(currentNodeLoc, 1);
         }
-        MessageUtils.log(player, "node: r=" + placementArea.toRelativeLocation(currentNodeLoc) + " a=" + MessageUtils.locationToString(currentNodeLoc), LogLevel.DEBUG);
         if (!placementArea.contains(currentNodeLoc)) {
-            MessageUtils.log(player, "^ is invalid", LogLevel.DEBUG);
-            //currentNodeLoc = direction.getFromLocation(currentNodeLoc, -1);
-            //throw new NodeOutOfBoundsException();
+            throw new NodeOutOfBoundsException();
         }
         BlockDisplay node = (BlockDisplay) startLoc.getWorld().spawnEntity(
                 new Location(startLoc.getWorld(), currentNodeLoc.getBlockX(), currentNodeLoc.y() + .4, currentNodeLoc.getBlockZ()),
@@ -152,10 +149,7 @@ public class LayoutEditor {
     public @Nullable Layout save(String name) {
         if (startLoc == null) return null;
         if (name != null) Layout.removeLayout(name);
-        //Vector3 relLoc = Vector3.of(startLoc.subtract(placementArea.getBottomLeft()));
         Vector3 relLoc = placementArea.toRelativeLocation(startLoc);
-        MessageUtils.log(player, "RlLoc @ save: " + relLoc, LogLevel.DEBUG);
-        MessageUtils.log(player, "PATH: " + path.toString(), LogLevel.DEBUG);
         return new Layout(name, relLoc, close(), path.toArray(new Direction[0]), true);
     }
 
@@ -223,7 +217,6 @@ public class LayoutEditor {
             if (editor == null) return;
             ItemStack item = event.getPlayer().getInventory().getItemInMainHand();
             Block block = event.getClickedBlock();
-            MessageUtils.log(p, "event call", LogLevel.DEBUG);
 
             if (editor.path.isEmpty()) {
                 // no nodes placed, set starting node to clicked block
@@ -267,10 +260,9 @@ public class LayoutEditor {
                         MessageUtils.log(editor.player, "No nodes have been placed.", LogLevel.ERROR);
                     } else {
                         editor.removeLastNode();
-                        MessageUtils.log(editor.player, "<red>Removed last node.</red>", LogLevel.SUCCESS);
+                        p.playSound(p, Sound.BLOCK_NOTE_BLOCK_IRON_XYLOPHONE, 1, .5f);
                     }
                 } else {
-                    //MessageUtils.log(p, "Use the inventory tools to modify the layout", LogLevel.ERROR);
                     return;
                 }
                 return;
@@ -278,9 +270,8 @@ public class LayoutEditor {
             try {
                 editor.addNode(dir); // automatically handles relative locations
                 p.playSound(p, Sound.BLOCK_NOTE_BLOCK_CHIME, 1, 1);
-                //MessageUtils.log(p, "Placed node facing " + dir.name().toLowerCase() + ".", LogLevel.SUCCESS);
             } catch (NodeOutOfBoundsException e) {
-                MessageUtils.log(p, "Didn't place node as it would be out of bounds", LogLevel.WARN);
+                p.playSound(p, Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 1, .3f);
             }
         }
     }
