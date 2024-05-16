@@ -154,11 +154,12 @@ public class Layout {
      */
     public void serialize(ConfigurationSection rootSection) {
         ConfigurationSection section = rootSection.createSection(name);
-        startLoc.serialize(rootSection.createSection("startLoc"));
+        startLoc.serialize(section.createSection("startLoc"));
         mesh.serialize(section, "blockMesh");
         section.set("path", Arrays.stream(path).map(Enum::name).toList());
         section.set("tickRate", enemyTickRate);
     }
+
 
     /**
      * Deserializes a layout from the provided section
