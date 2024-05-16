@@ -66,6 +66,7 @@ public final class TowerDefense extends JavaPlugin {
     @Override
     public void onDisable() {
         // Close any open editors
+        LayoutEditor.closeAll();
         MeshEditor.closeAll();
 
         // Save configs

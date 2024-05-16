@@ -208,6 +208,15 @@ public class LayoutEditor {
         return openEditors.get(player);
     }
 
+    /**
+     * Close all open editors without saving them
+     */
+    public static void closeAll() {
+        for (LayoutEditor e : openEditors.values()) {
+            e.close();
+        }
+    }
+
     public static final class EventListener implements Listener {
         @EventHandler
         public void onInteract(PlayerInteractEvent event) {
