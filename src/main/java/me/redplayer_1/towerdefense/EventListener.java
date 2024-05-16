@@ -21,7 +21,7 @@ public class EventListener implements Listener {
             new TDPlayer(p, true);
         } catch (NotEnoughPlotSpaceException e) {
             if (TDPlayer.isPrivileged(p)) {
-                MessageUtils.log(p, e.toString(), LogLevel.CRITICAL);
+                MessageUtils.log(p, e.getMessage(), LogLevel.CRITICAL);
             } else {
                 p.kick(Component.text("Not enough plot space!"));
             }
@@ -41,7 +41,6 @@ public class EventListener implements Listener {
             tdPlayer.serialize();
         } else if (!TDPlayer.isPrivileged(event.getPlayer())){
             MessageUtils.log(Bukkit.getConsoleSender(), "player left  without tdplayer (test consolesender)", LogLevel.WARN);
-            Bukkit.getLogger().warning("Player \"" + event.getPlayer().getName() + "\" left without a TDPlayer");
         }
     }
 }
