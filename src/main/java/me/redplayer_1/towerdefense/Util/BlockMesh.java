@@ -156,7 +156,7 @@ public class BlockMesh {
          */
         boolean xCheck = loc.x >= bl.x && loc.x <= tr.x;
         boolean yCheck = loc.y >= bl.y && loc.y <= tr.y;
-        boolean zCheck = loc.z >= tr.z && loc.z <= bl.z;;
+        boolean zCheck = loc.z >= tr.z && loc.z <= bl.z;
         return location.getWorld() == bottomLeft.getWorld()
                 && xCheck
                 && yCheck
