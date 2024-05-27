@@ -62,8 +62,11 @@ public class TowerCommand  extends Command {
                         int x = Integer.parseInt(args[1]);
                         int y = Integer.parseInt(args[2]);
                         int z = Integer.parseInt(args[3]);
+                        BlockMesh mesh = new BlockMesh(x, z, y);
+                        mesh.setBottomLeft(player.getLocation());
+                        mesh.fillMesh(Material.AIR);
                         factories.put(player, new TowerFactory().setEditor(new MeshEditor(
-                                player, new BlockMesh(x, z, y), Material.BEDROCK //TODO: make config value
+                                player, mesh, Material.BEDROCK //TODO: make config value
                         )));
                         log(player, "Now editing a new tower", LogLevel.SUCCESS);
                     } catch (NumberFormatException e) {
@@ -113,6 +116,7 @@ public class TowerCommand  extends Command {
                         // TODO: cost
                         try {
                             Towers.add(factory.build());
+                            factories.remove(player);
                             log(player, "Tower created", LogLevel.SUCCESS);
                         } catch (IllegalStateException e) {
                             log(player, "Something went wrong while creating the tower, please report", LogLevel.CRITICAL);
@@ -137,10 +141,9 @@ public class TowerCommand  extends Command {
             case "list" -> {
                 player.sendRichMessage("<gray>----- <b><gold>Towers</gold></b> ------</gray>");
                 for (Tower t : Towers.getTowers()) {
-                    player.sendRichMessage(
-                            // TODO: config val (w/ format specifiers)?
-                            "<hover:show_text:'<red>Range</red>: <gray>" + t.getRange() + "</gray><newline><red>Damage</red>: <gray>" + t.getDamage() + "</gray><newline><red>Cost</red>: <gray>not implemented</gray><newline><red>Item</red>: " + MessageUtils.fromMiniMessage(t.getItem().displayName()) + "'><yellow>" + t.name + "</yellow></hover>"
-                    );
+                    player.sendMessage(MessageUtils.asMiniMessage("<yellow>" + t.name + "</yellow>").hoverEvent(MessageUtils.asMiniMessage(
+                            "<red>Range</red>: <gray>" + t.getRange() + "</gray><newline><red>Damage</red>: <gray>" + t.getDamage() + "</gray><newline><red>Cost</red>: <gray>not implemented</gray><newline><red>Item</red>: "
+                    ).append(t.getItem().displayName())));
                 }
                 player.sendRichMessage("<gray>------------</gray>");
             }
@@ -150,7 +153,7 @@ public class TowerCommand  extends Command {
 
     @Override
     public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException {
-        if (args.length == 0) {
+        if (args.length == 1) {
             return PRIVILEGED_ARGS;
         } else {
             return Collections.emptyList();
