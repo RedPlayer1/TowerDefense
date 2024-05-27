@@ -26,8 +26,9 @@ public class LayoutEditor {
     private static final Material PLATFORM_BASE = Material.STONE_BRICKS;
     private static HashMap<Player, LayoutEditor> openEditors = new HashMap<>();
     private static final ItemStack[] toolInventory = {
-            ItemUtils.create("Left", Material.STICK),
             ItemUtils.create("Forward", Material.STICK),
+            ItemUtils.create("Backward", Material.STICK),
+            ItemUtils.create("Left", Material.STICK),
             ItemUtils.create("Right", Material.STICK),
             ItemUtils.create("Delete", Material.RED_DYE)
     };
@@ -105,6 +106,7 @@ public class LayoutEditor {
             currentNodeLoc = direction.toLocation(currentNodeLoc, 1);
         }
         if (!placementArea.contains(currentNodeLoc)) {
+            currentNodeLoc = direction.toLocation(currentNodeLoc, -1);
             throw new NodeOutOfBoundsException();
         }
         BlockDisplay node = (BlockDisplay) startLoc.getWorld().spawnEntity(
@@ -254,8 +256,9 @@ public class LayoutEditor {
             if (item.getType() != Material.AIR && item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
                 dir = switch (MessageUtils.fromMiniMessage(item.getItemMeta().displayName())) {
                     case "Left" -> Direction.WEST;
-                    case "Forward" -> Direction.NORTH;
                     case "Right" -> Direction.EAST;
+                    case "Forward" -> Direction.NORTH;
+                    case "Backward" -> Direction.SOUTH;
                     case "Delete" -> {
                         remove = true;
                         yield null;

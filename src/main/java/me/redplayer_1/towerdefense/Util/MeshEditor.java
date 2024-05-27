@@ -14,7 +14,7 @@ public class MeshEditor {
     private final @Nullable Location prevBottomLeft;
     private final BlockMesh mesh;
     private final BlockMesh platform;
-    private final BlockMesh originalArea;
+    private final BlockMesh originalArea; // stores the landscape before it was changed by the editor
 
     /**
      * Creates a new editor at the player's location and creates a base platform

@@ -80,7 +80,7 @@ public class Plot {
                 }
             }
         }
-        Bukkit.broadcast(Component.text("NEW PLOT CREATE w/ Layout " + (this.layout != null? this.layout.getName() : "null")));
+        Bukkit.broadcast(Component.text("NEW PLOT CREATE w/ Layout " + (this.layout != null? this.layout.getName() : "null") + " @ " + MessageUtils.locationToString(getBottomLeft())));
         if (this.layout == null) {
             EMPTY_PLOT_MESH.place(getBottomLeft());
         } else {

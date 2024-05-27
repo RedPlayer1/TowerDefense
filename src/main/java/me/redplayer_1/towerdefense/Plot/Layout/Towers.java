@@ -10,10 +10,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.LinkedList;
 
 public final class Towers {
+    // tower registry
     private static final LinkedList<Tower> towers = new LinkedList<>();
 
     //TODO: tower editor (edit attrs via inventory + mesh editor)
-    // -- create mesheditor class & use for this + layout editor?
 
     public static void add(Tower tower) {
         towers.removeIf(t -> t.name.equals(tower.name));
@@ -28,6 +28,10 @@ public final class Towers {
         return towers;
     }
 
+    /**
+     * @param name name of the tower to get
+     * @return a copy of the specified tower template or null if it doesn't exist
+     */
     public static @Nullable Tower get(String name) {
         Tower template = null;
         for (Tower tower : towers) {
@@ -37,7 +41,7 @@ public final class Towers {
             }
         }
         if (template == null) return null;
-        return new Tower(name, template.getItem(), template.getRange(), template.getMesh());
+        return new Tower(name, template.getItem(), template.getRange(), template.getDamage(), template.getMesh());
     }
 
     /**

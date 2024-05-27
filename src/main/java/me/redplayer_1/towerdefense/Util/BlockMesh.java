@@ -16,8 +16,6 @@ import java.util.function.BiConsumer;
  * A rectangular area of blocks
  */
 public class BlockMesh {
-    private static final String DATA_SEPARATOR = "::";
-
     public final int width; // x
     public final int depth; // z
     public final int height; // y

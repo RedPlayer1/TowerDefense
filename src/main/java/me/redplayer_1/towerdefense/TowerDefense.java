@@ -19,6 +19,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
 
+/*
+TODO:
+- Health command/inventory (run tests & return results)
+ */
+
 public final class TowerDefense extends JavaPlugin {
     public static TowerDefense INSTANCE;
     public Config mainConfig;

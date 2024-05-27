@@ -9,14 +9,17 @@ public class Tower {
     public final String name;
     private @Nullable Location location;
     private ItemStack item;
-    private int range; /* Range.Unlimited, Range.None */
+    private int range; /* Range.Unlimited -1, Range.None 0*/
+    private int damage;
     private BlockMesh mesh;
 
-    public Tower(String name, ItemStack item, int range, BlockMesh mesh) {
+    public Tower(String name, ItemStack item, int range, int damage, BlockMesh mesh) {
         this.name = name;
-        location = null;
         this.item = item;
-
+        this.range = range;
+        this.damage = damage;
+        this.mesh = mesh;
+        location = null;
     }
     /*
     Use offensive/defensive(or support) tower subclasses?
@@ -52,6 +55,14 @@ public class Tower {
 
     public int getRange() {
         return range;
+    }
+
+    public void setDamage(int damage) {
+        this.damage = damage;
+    }
+
+    public int getDamage() {
+        return damage;
     }
 
     public BlockMesh getMesh() {
