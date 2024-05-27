@@ -19,7 +19,7 @@ public class MeshEditor {
     /**
      * Creates a new editor at the player's location and creates a base platform
      * @param player the player editing the mesh
-     * @param mesh the mesh to be edited
+     * @param mesh the mesh to be edited (must have a bottomLeft location)
      * @param platformMaterial the material the base platform will be made of
      */
     public MeshEditor(Player player, BlockMesh mesh, Material platformMaterial) {
@@ -28,7 +28,8 @@ public class MeshEditor {
         prevBottomLeft = mesh.getBottomLeft();
         bottomLeft = player.getLocation().subtract(0, 1, 0);
         originalArea = new BlockMesh(mesh.width, mesh.depth, mesh.height + 1 /* includes platform */);
-        originalArea.capture(player.getLocation().subtract(0, 1, 0));
+        originalArea.setBottomLeft(bottomLeft);
+        originalArea.capture(bottomLeft);
         platform = new BlockMesh(mesh.width, mesh.depth, 1);
         platform.fillMesh(platformMaterial);
         platform.place(bottomLeft);
