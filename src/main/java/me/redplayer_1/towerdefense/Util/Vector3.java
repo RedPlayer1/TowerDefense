@@ -40,10 +40,19 @@ public class Vector3 {
     /**
      * Adds the Vector's coordinates to this Vector
      * @param vec the vector to add values from (not modified)
-     * @return the same (modified) vector
+     * @return the modified vector
      */
     public Vector3 add(Vector3 vec) {
         return add(vec.x, vec.y, vec.z);
+    }
+
+    /**
+     * Adds the Location's block coordinates to this Vector
+     * @param loc the location to add
+     * @return the modified vector
+     */
+    public Vector3 add(Location loc) {
+        return add(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
     }
 
     /**
