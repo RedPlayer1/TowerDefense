@@ -5,8 +5,9 @@ import me.redplayer_1.towerdefense.Command.PlotCommand;
 import me.redplayer_1.towerdefense.Command.TowerCommand;
 import me.redplayer_1.towerdefense.Plot.Layout.Layout;
 import me.redplayer_1.towerdefense.Plot.Layout.LayoutEditor;
-import me.redplayer_1.towerdefense.Plot.Layout.Towers;
+import me.redplayer_1.towerdefense.Plot.Layout.Layouts;
 import me.redplayer_1.towerdefense.Plot.Plot;
+import me.redplayer_1.towerdefense.Plot.Tower.Towers;
 import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MeshEditor;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
@@ -59,9 +60,9 @@ public final class TowerDefense extends JavaPlugin {
         Plot.loadConfigValues(mainConfig.getConfig());
 
         // Load layout templates
-        Layout.loadLayoutTemplates(layoutTemplates.getConfig());
+        Layouts.loadLayoutTemplates(layoutTemplates.getConfig());
         Layout.loadConfigValues(mainConfig.getConfig());
-        MessageUtils.log(Bukkit.getConsoleSender(), "Loaded " + Layout.getLayouts().size() + " layout templates", LogLevel.SUCCESS);
+        MessageUtils.log(Bukkit.getConsoleSender(), "Loaded " + Layouts.getTemplates().size() + " layout templates", LogLevel.SUCCESS);
 
         // Load tower templates
         Towers.deserialize(towerTemplates.getConfig());
@@ -78,7 +79,7 @@ public final class TowerDefense extends JavaPlugin {
         Plot.saveConfigValues(mainConfig.getConfig());
         Layout.saveConfigValues(mainConfig.getConfig());
         ConfigurationSection layoutConfig = layoutTemplates.getConfig();
-        for (Layout layout : Layout.getLayouts()) {
+        for (Layout layout : Layouts.getTemplates()) {
             layout.serialize(layoutConfig);
         }
         Towers.serialize(towerTemplates.getConfig());

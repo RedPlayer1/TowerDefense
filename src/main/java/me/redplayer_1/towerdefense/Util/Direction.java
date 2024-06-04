@@ -1,4 +1,4 @@
-package me.redplayer_1.towerdefense.Plot;
+package me.redplayer_1.towerdefense.Util;
 
 import org.bukkit.Location;
 
@@ -33,10 +33,10 @@ public enum Direction {
     }
 
     /**
-     * Returns the location 1 block in this direction
+     * Returns the location <b><i>x</i></b> blocks in this direction
      * @param base the starting location
      * @param distance the distance the new location is from the base (going straight in this direction)
-     * @return a new location 1 block in this direction
+     * @return the new location
      */
     public Location toLocation(Location base, double distance) {
         Location result = new Location(base.getWorld(), base.getX(), base.getY(), base.getZ());

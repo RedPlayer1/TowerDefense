@@ -1,10 +1,8 @@
 package me.redplayer_1.towerdefense.Command;
 
-import static me.redplayer_1.towerdefense.Util.MessageUtils.log;
-
-import me.redplayer_1.towerdefense.Plot.Layout.Tower;
-import me.redplayer_1.towerdefense.Plot.Layout.TowerFactory;
-import me.redplayer_1.towerdefense.Plot.Layout.Towers;
+import me.redplayer_1.towerdefense.Plot.Tower.Tower;
+import me.redplayer_1.towerdefense.Plot.Tower.TowerFactory;
+import me.redplayer_1.towerdefense.Plot.Tower.Towers;
 import me.redplayer_1.towerdefense.TDPlayer;
 import me.redplayer_1.towerdefense.Util.BlockMesh;
 import me.redplayer_1.towerdefense.Util.LogLevel;
@@ -14,12 +12,15 @@ import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+
+import static me.redplayer_1.towerdefense.Util.MessageUtils.log;
 
 public class TowerCommand  extends Command {
     // privileged only command
@@ -29,6 +30,7 @@ public class TowerCommand  extends Command {
             + MessageUtils.helpEntry("/tower create", "<width (x)> <height (y)> <depth (z)>", "create a new editor with the provided tower dimensions") + '\n'
             + MessageUtils.helpEntry("/tower edit", "<name>", "edit a tower's mesh") + '\n'
             + MessageUtils.helpEntry("/tower save", "<name> <range> <damage> <cost>", "creates a new tower with the provided params and with an item set to the held item") + '\n'
+            + MessageUtils.helpEntry("/tower delete", "<name>", "delete a tower") + '\n'
             + MessageUtils.helpEntry("/tower quit", null, "exit the active editor without saving it") + '\n'
             + MessageUtils.helpEntry("/tower list", null, "lists all the created towers");
     private HashMap<Player, TowerFactory> factories = new LinkedHashMap<>();
@@ -100,6 +102,7 @@ public class TowerCommand  extends Command {
                         // no args supplied, check if the factory was based on a preexisting tower
                         try {
                             Towers.add(factory.build());
+                            factories.remove(player);
                             log(player, "Updated existing tower", LogLevel.SUCCESS);
                         } catch (IllegalStateException e) {
                             log(player, "Not enough args", LogLevel.ERROR);
@@ -109,7 +112,12 @@ public class TowerCommand  extends Command {
                     }
                 } else {
                     try {
-                        factory.setItem(player.getInventory().getItemInMainHand());
+                        ItemStack item = player.getInventory().getItemInMainHand();
+                        if (item.getType() == Material.AIR) {
+                            log(player, "A tower item cannot be air", LogLevel.ERROR);
+                            return true;
+                        }
+                        factory.setItem(item);
                         factory.setName(args[1]);
                         factory.setRange(Integer.parseInt(args[2]));
                         factory.setDamage(Integer.parseInt(args[3]));
@@ -123,6 +131,19 @@ public class TowerCommand  extends Command {
                         }
                     } catch (NumberFormatException e) {
                         log(player, "The range and damage arguments must be valid integers", LogLevel.ERROR);
+                    }
+                }
+            }
+            case "delete" -> {
+                if (args.length < 2) {
+                    log(player, "Not enough args", LogLevel.ERROR);
+                } else {
+                    Tower tower = Towers.get(args[1]);
+                    if (tower != null) {
+                        Towers.remove(args[1]);
+                        log(player, "Removed \"" + args[1] + "\"", LogLevel.SUCCESS);
+                    } else {
+                        log(player, "No such tower exists", LogLevel.ERROR);
                     }
                 }
             }

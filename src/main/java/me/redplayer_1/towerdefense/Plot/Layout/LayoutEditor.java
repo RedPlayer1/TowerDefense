@@ -1,7 +1,6 @@
 package me.redplayer_1.towerdefense.Plot.Layout;
 
 import me.redplayer_1.towerdefense.Exception.NodeOutOfBoundsException;
-import me.redplayer_1.towerdefense.Plot.Direction;
 import me.redplayer_1.towerdefense.Util.*;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -17,6 +16,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.Transformation;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -24,7 +24,7 @@ import java.util.LinkedList;
 
 public class LayoutEditor {
     private static final Material PLATFORM_BASE = Material.STONE_BRICKS;
-    private static HashMap<Player, LayoutEditor> openEditors = new HashMap<>();
+    private static final HashMap<Player, LayoutEditor> openEditors = new HashMap<>();
     private static final ItemStack[] toolInventory = {
             ItemUtils.create("Forward", Material.STICK),
             ItemUtils.create("Backward", Material.STICK),
@@ -110,7 +110,7 @@ public class LayoutEditor {
             throw new NodeOutOfBoundsException();
         }
         BlockDisplay node = (BlockDisplay) startLoc.getWorld().spawnEntity(
-                new Location(startLoc.getWorld(), currentNodeLoc.getBlockX(), currentNodeLoc.y() + .4, currentNodeLoc.getBlockZ()),
+                new Location(startLoc.getWorld(), currentNodeLoc.getBlockX(), currentNodeLoc.y() + 1, currentNodeLoc.getBlockZ()),
                 EntityType.BLOCK_DISPLAY
         );
         final Direction finalDirection = direction;
@@ -125,8 +125,9 @@ public class LayoutEditor {
             ((Directional) data).setFacing(facing);
         }));
         node.setGlowing(true);
-        node.setDisplayHeight(.3f);
-        node.setDisplayHeight(.3f);
+        Transformation t = node.getTransformation();
+        t.getScale().set(.5f);
+        node.setTransformation(t);
         placedNodes.add(node);
         path.add(direction);
     }
@@ -142,17 +143,15 @@ public class LayoutEditor {
     }
 
     /**
-     * Saves and closes the editor and assigns its layout the provided name.
-     *
+     * Saves and closes the editor, assigns its layout the provided name and adds it as a template.
      * @param name the name of the layout
-     * @return the created layout (or null if the layout is incomplete)
      * @see LayoutEditor#close()
      */
-    public @Nullable Layout save(String name) {
-        if (startLoc == null) return null;
-        if (name != null) Layout.removeLayout(name);
+    public void save(String name) {
+        if (startLoc == null) return;
+        if (name != null) Layouts.removeTemplate(name); // ensure there no duplicates
         Vector3 relLoc = placementArea.toRelativeLocation(startLoc);
-        return new Layout(name, relLoc, close(), path.toArray(new Direction[0]), true);
+        Layouts.addTemplate(new Layout(name, relLoc, close(), path.toArray(new Direction[0])));
     }
 
     /**

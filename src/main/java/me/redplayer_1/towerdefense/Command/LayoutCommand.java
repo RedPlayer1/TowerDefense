@@ -2,6 +2,7 @@ package me.redplayer_1.towerdefense.Command;
 
 import me.redplayer_1.towerdefense.Plot.Layout.Layout;
 import me.redplayer_1.towerdefense.Plot.Layout.LayoutEditor;
+import me.redplayer_1.towerdefense.Plot.Layout.Layouts;
 import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.command.Command;
@@ -46,7 +47,7 @@ public class LayoutCommand extends Command {
             case "create" -> new LayoutEditor(player);
             case "edit" -> {
                 if (args.length >= 2) {
-                    Layout layout = Layout.getLayout(args[1]);
+                    Layout layout = Layouts.getTemplate(args[1]);
                     if (layout != null) {
                         new LayoutEditor(player, layout);
                     } else {
@@ -76,7 +77,7 @@ public class LayoutCommand extends Command {
                 if (args.length < 2) {
                     MessageUtils.log(player, "Not Enough args", LogLevel.ERROR);
                 } else {
-                    if (Layout.removeLayout(args[1]) != null) {
+                    if (Layouts.removeTemplate(args[1])) {
                         MessageUtils.log(player, "Removed layout", LogLevel.SUCCESS);
                     } else {
                         MessageUtils.log(player, "No layout named \"" + args[1] + "\" exists", LogLevel.WARN);
@@ -94,9 +95,9 @@ public class LayoutCommand extends Command {
             }
             case "list" -> {
                 StringBuilder message = new StringBuilder("<dark_gray>Layouts</dark_gray><newline>");
-                for (Layout layout : Layout.getLayouts()) {
+                for (Layout layout : Layouts.getTemplates()) {
                     message.append("<yellow>").append(layout.getName());
-                    if (layout == Layout.defaultLayout) {
+                    if (layout.getName().equals(Layout.defaultLayout)) {
                         message.append("<white> - </white><dark_green>DEFAULT</dark_green>");
                     }
                     message.append("</yellow><newline>");
@@ -106,15 +107,14 @@ public class LayoutCommand extends Command {
             case "default" -> {
                 if (args.length > 1) {
                     // default layout name supplied
-                    Layout newDefault = Layout.getLayout(args[1]);
-                    if (newDefault != null) {
+                    if (Layouts.isTemplate(args[1])) {
                         MessageUtils.log(player,
                                 "The default layout is now <white><i>" + args[1] + "</i></white> (was <white><i>"
-                                        + (Layout.defaultLayout != null? Layout.defaultLayout.getName() : "none")
+                                        + (Layout.defaultLayout != null? Layout.defaultLayout : "none")
                                         + "</i></white>)",
                                 LogLevel.SUCCESS
                         );
-                        Layout.defaultLayout = newDefault;
+                        Layout.defaultLayout = args[1];
                     } else {
                         MessageUtils.log(player, "No layout named " + args[1] + " exists", LogLevel.ERROR);
                     }
@@ -122,7 +122,7 @@ public class LayoutCommand extends Command {
                     // send current default layout
                     if (Layout.defaultLayout != null) {
                         MessageUtils.log(player,
-                                "The default layout is <white><i>" + Layout.defaultLayout.getName() + "</i></white>",
+                                "The default layout is <white><i>" + Layout.defaultLayout + "</i></white>",
                                 LogLevel.SUCCESS
                         );
                     } else {

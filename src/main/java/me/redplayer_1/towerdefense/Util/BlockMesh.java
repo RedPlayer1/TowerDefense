@@ -173,6 +173,12 @@ public class BlockMesh {
                 bottomLeft.getBlockZ() - location.getBlockZ());
     }
 
+    /**
+     * Turns a vector that is relative to the mesh's bottom left into a location relative to the world's (0, 0, 0)
+     * @param rel the relative position
+     * @param world the location's world
+     * @return the new location
+     */
     public @Nullable Location fromRelativeLocation(Vector3 rel, @Nullable World world) {
         if (bottomLeft == null) return null;
         return new Location(

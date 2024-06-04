@@ -1,4 +1,4 @@
-package me.redplayer_1.towerdefense.Plot.Layout;
+package me.redplayer_1.towerdefense.Plot.Tower;
 
 import me.redplayer_1.towerdefense.Util.BlockMesh;
 import me.redplayer_1.towerdefense.Util.MeshEditor;

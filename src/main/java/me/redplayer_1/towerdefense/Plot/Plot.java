@@ -3,6 +3,7 @@ package me.redplayer_1.towerdefense.Plot;
 import me.redplayer_1.towerdefense.Exception.NoLayoutFoundException;
 import me.redplayer_1.towerdefense.Exception.NotEnoughPlotSpaceException;
 import me.redplayer_1.towerdefense.Plot.Layout.Layout;
+import me.redplayer_1.towerdefense.Plot.Layout.Layouts;
 import me.redplayer_1.towerdefense.TowerDefense;
 import me.redplayer_1.towerdefense.Util.BlockMesh;
 import me.redplayer_1.towerdefense.Util.LocationUtils;
@@ -35,7 +36,7 @@ public class Plot {
     private static Location gridOrigin = null; // (0, 0) in relative coordinates
     private static int usedPlots = 0;
 
-    private Layout layout = null;
+    private Layout layout;
     private int x;
     private int y;
 
@@ -50,26 +51,18 @@ public class Plot {
 
     /**
      * Create a new plot and add it to the plot grid
-     * @param layout The plot's layout. If null, the default layout will be used
+     * @param layoutName The anme plot's layout. If null, the default layout will be used
      * @throws NotEnoughPlotSpaceException if the plot grid is full or the grid's origin isn't set
      * @throws NoLayoutFoundException if the {@link Layout#defaultLayout default layout} should be used
      * (layout param is null) but it isn't set
      */
-    public Plot(@Nullable Layout layout) throws NotEnoughPlotSpaceException, NoLayoutFoundException {
+    public Plot(@Nullable String layoutName) throws NotEnoughPlotSpaceException, NoLayoutFoundException {
         if (gridOrigin == null) {
             throw new NotEnoughPlotSpaceException("Grid origin not initialized");
         }
         if (usedPlots > plotGridSize * plotGridSize) {
             throw new NotEnoughPlotSpaceException("Not enough plots");
         }
-        if (layout == null) {
-            if (Layout.defaultLayout == null) {
-                throw new NoLayoutFoundException("The default layout isn't set");
-            } else {
-                this.layout = Layout.defaultLayout;
-            }
-        }
-
         for (int y = 0; y < plotGridSize; y++) {
             for (int x = 0; x < plotGridSize; x++) {
                 if (plots[y][x] != null) {
@@ -80,12 +73,16 @@ public class Plot {
                 }
             }
         }
-        Bukkit.broadcast(Component.text("NEW PLOT CREATE w/ Layout " + (this.layout != null? this.layout.getName() : "null") + " @ " + MessageUtils.locationToString(getBottomLeft())));
-        if (this.layout == null) {
-            EMPTY_PLOT_MESH.place(getBottomLeft());
-        } else {
-            this.layout.place(getBottomLeft());
+        if (layoutName == null) {
+            if (Layout.defaultLayout == null) {
+                throw new NoLayoutFoundException("The default layout isn't set");
+            } else {
+                layoutName = Layout.defaultLayout;
+            }
         }
+        layout = Layouts.getLayout(layoutName, getBottomLeft());
+
+        Bukkit.broadcast(Component.text("NEW PLOT CREATE w/ Layout " + (this.layout != null? this.layout.getName() : "null") + " @ " + MessageUtils.locationToString(getBottomLeft())));
     }
 
     /**
@@ -129,7 +126,12 @@ public class Plot {
      * @return the bottom left coordinate of the plot
      */
     public Location getBottomLeft() {
-        return new Location(gridOrigin.getWorld(), x * Layout.SIZE, gridOrigin.getBlockY(), y * Layout.SIZE);
+        return new Location(
+                gridOrigin.getWorld(),
+                gridOrigin.getBlockX() + x * Layout.SIZE,
+                gridOrigin.getBlockY(),
+                gridOrigin.getBlockZ() + y * Layout.SIZE
+        );
     }
 
     /**
@@ -159,10 +161,8 @@ public class Plot {
      */
     public static Plot deserialize(ConfigurationSection section) throws NotEnoughPlotSpaceException, NoLayoutFoundException {
         String layoutName = section.getString("layout");
-        if (layoutName == null) throw new NoLayoutFoundException("Layout name isn't in the config");
-        Layout plotLayout =  Layout.getLayout(layoutName);
-        if (plotLayout == null) throw new NoLayoutFoundException("No layout named \"" + layoutName + "\" exists");
-        return new Plot(plotLayout);
+        if (!Layouts.isTemplate(layoutName)) throw new NoLayoutFoundException("Layout name isn't in the config");
+        return new Plot(layoutName);
     }
 
     public static void setPlotGridOrigin(Location origin) {
@@ -173,8 +173,7 @@ public class Plot {
             for (int x = 0; x < plotGridSize; x++) {
                 Plot plot = plots[y][x];
                 if (plot != null) {
-                    plot.layout.remove();
-                    plot.layout.place(plot.getBottomLeft());
+                    plot.layout.move(plot.getBottomLeft());
                 }
             }
         }

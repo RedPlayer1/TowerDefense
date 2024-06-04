@@ -1,4 +1,4 @@
-package me.redplayer_1.towerdefense.Plot.Layout;
+package me.redplayer_1.towerdefense.Plot.Tower;
 
 import me.redplayer_1.towerdefense.Exception.NoSuchTemplateException;
 import me.redplayer_1.towerdefense.Util.MeshEditor;
@@ -59,12 +59,11 @@ public final class Towers {
     }
 
     /**
-     * Opens an attribute editor inventory for the tower
+     * Opens an attribute editor inventory for the tower. Any changes made are automatically applied to the tower
      * @param player the player to open the inventory for
-     * @param towerName the name of the tower to edit
-     * @throws NoSuchTemplateException if a template of the provided name cannot be found
+     * @param tower the tower to edit
      */
-    public static void openAttributeEditorInventory(Player player, String towerName) throws NoSuchTemplateException{
+    public static void openAttributeEditorInventory(Player player, Tower tower) {
         // TODO: open inventory & take player input (chat/sign/anvil paper)
     }
 
@@ -72,12 +71,13 @@ public final class Towers {
      * Creates a new {@link me.redplayer_1.towerdefense.Util.MeshEditor MeshEditor} for a tower template
      * @param player the player editing the tower
      * @param towerName the name of the tower to edit
+     * @return the created editor
      * @throws NoSuchTemplateException if a template of the provided name cannot be found
      */
-    public static void openMeshEditor(Player player, String towerName) throws NoSuchTemplateException {
+    public static MeshEditor openMeshEditor(Player player, String towerName) throws NoSuchTemplateException {
         Tower template = getTemplate(towerName);
         if (template != null) {
-            new MeshEditor(player, template.getMesh(), Material.PODZOL);
+            return new MeshEditor(player, template.getMesh(), Material.PODZOL);
         } else {
             throw new NoSuchTemplateException();
         }
