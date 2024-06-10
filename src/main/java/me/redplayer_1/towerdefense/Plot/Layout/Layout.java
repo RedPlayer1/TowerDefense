@@ -24,6 +24,7 @@ public class Layout {
     private World world;
     private final Vector3 startLoc; // relative to bottomLeft
     private final BlockMesh mesh;
+    private final GridItem[][] grid; // a [z][x] 2d representation of the
     private final Direction[] path;
     private LinkedList<Enemy> enemies;
     private LinkedList<Tower> towers;
@@ -46,6 +47,7 @@ public class Layout {
         world = null;
         this.startLoc = startLoc;
         this.mesh = mesh;
+        grid = new GridItem[SIZE][SIZE];
         this.path = path;
         this.towers.addAll(Arrays.asList(towers));
     }
@@ -88,6 +90,21 @@ public class Layout {
     public void remove() {
         spawner.cancel();
         mesh.destroy();
+    }
+
+    /**
+     * Places the Tower at a location
+     * @param tower the tower to place
+     * @param location the location to place the Tower
+     * @return if the Tower can be placed in that location
+     */
+    public boolean placeTower(Tower tower, Location location) {
+        if (mesh.canPlace(location)) {
+            mesh.place(location);
+            tower.setLocation(location);
+            return true;
+        }
+        return false;
     }
 
     public String getName() {

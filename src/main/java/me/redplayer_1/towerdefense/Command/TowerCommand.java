@@ -24,7 +24,7 @@ import static me.redplayer_1.towerdefense.Util.MessageUtils.log;
 
 public class TowerCommand  extends Command {
     // privileged only command
-    private static final List<String> PRIVILEGED_ARGS = List.of("help", "create", "edit", "save", "quit", "list");
+    private static final List<String> PRIVILEGED_ARGS = List.of("help", "create", "edit", "save", "quit", "list", "give");
     private static final String PRIVILEGED_HELP_MSG =
             MessageUtils.helpEntry("/tower help", null, "show this help page") + '\n'
             + MessageUtils.helpEntry("/tower create", "<width (x)> <height (y)> <depth (z)>", "create a new editor with the provided tower dimensions") + '\n'
@@ -32,8 +32,9 @@ public class TowerCommand  extends Command {
             + MessageUtils.helpEntry("/tower save", "<name> <range> <damage> <cost>", "creates a new tower with the provided params and with an item set to the held item") + '\n'
             + MessageUtils.helpEntry("/tower delete", "<name>", "delete a tower") + '\n'
             + MessageUtils.helpEntry("/tower quit", null, "exit the active editor without saving it") + '\n'
-            + MessageUtils.helpEntry("/tower list", null, "lists all the created towers");
-    private HashMap<Player, TowerFactory> factories = new LinkedHashMap<>();
+            + MessageUtils.helpEntry("/tower list", null, "lists all the created towers") + '\n'
+            + MessageUtils.helpEntry("/tower give", "<name>", "gives you the specified tower in item form");
+    private final HashMap<Player, TowerFactory> factories = new LinkedHashMap<>();
 
     public TowerCommand() {
         super("tower");
@@ -113,8 +114,8 @@ public class TowerCommand  extends Command {
                 } else {
                     try {
                         ItemStack item = player.getInventory().getItemInMainHand();
-                        if (item.getType() == Material.AIR) {
-                            log(player, "A tower item cannot be air", LogLevel.ERROR);
+                        if (!item.getType().isBlock()) {
+                            log(player, "A tower item must be a placeable block", LogLevel.ERROR);
                             return true;
                         }
                         factory.setItem(item);
@@ -167,6 +168,20 @@ public class TowerCommand  extends Command {
                     ).append(t.getItem().displayName())));
                 }
                 player.sendRichMessage("<gray>------------</gray>");
+            }
+            case "give" -> {
+                if (args.length < 2) {
+                    log(player, "Not enough args", LogLevel.ERROR);
+                } else {
+                    Tower t = Towers.get(args[1]);
+                    if (t != null) {
+                        if (player.getInventory().addItem(t.getItem()).isEmpty()) {
+                            log(player, "Your inventory is full!", LogLevel.WARN);
+                        }
+                    } else {
+                        log(player, "Invalid tower name", LogLevel.ERROR);
+                    }
+                }
             }
         }
         return true;

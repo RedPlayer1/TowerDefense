@@ -51,7 +51,7 @@ public class Plot {
 
     /**
      * Create a new plot and add it to the plot grid
-     * @param layoutName The anme plot's layout. If null, the default layout will be used
+     * @param layoutName The name plot's layout. If null, the default layout will be used
      * @throws NotEnoughPlotSpaceException if the plot grid is full or the grid's origin isn't set
      * @throws NoLayoutFoundException if the {@link Layout#defaultLayout default layout} should be used
      * (layout param is null) but it isn't set
@@ -132,6 +132,10 @@ public class Plot {
                 gridOrigin.getBlockY(),
                 gridOrigin.getBlockZ() + y * Layout.SIZE
         );
+    }
+
+    public Layout getLayout() {
+        return layout;
     }
 
     /**
