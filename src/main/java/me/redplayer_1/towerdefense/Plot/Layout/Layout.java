@@ -12,6 +12,7 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -24,7 +25,7 @@ public class Layout {
     private World world;
     private final Vector3 startLoc; // relative to bottomLeft
     private final BlockMesh mesh;
-    private final GridItem[][] grid; // a [z][x] 2d representation of the
+    private final Grid grid;
     private final Direction[] path;
     private LinkedList<Enemy> enemies;
     private LinkedList<Tower> towers;
@@ -47,9 +48,29 @@ public class Layout {
         world = null;
         this.startLoc = startLoc;
         this.mesh = mesh;
-        grid = new GridItem[SIZE][SIZE];
+        grid = new Grid(SIZE, SIZE);
         this.path = path;
+        addPathToGrid();
         this.towers.addAll(Arrays.asList(towers));
+    }
+
+    /**
+     * Adds items to the grid where the path would be to prevent towers from being placed there
+     */
+    private void addPathToGrid() {
+        int x, y;
+        x = startLoc.x;
+        y = startLoc.z;
+        final GridItem pathItem = new GridItem();
+        for (Direction dir : path) {
+            grid.add(pathItem, x, y);
+            switch (dir) {
+                case NORTH -> y++;
+                case SOUTH -> y--;
+                case EAST -> x++;
+                case WEST -> x--;
+            }
+        }
     }
 
     public void startSpawner() {
@@ -100,11 +121,27 @@ public class Layout {
      */
     public boolean placeTower(Tower tower, Location location) {
         if (mesh.canPlace(location)) {
-            mesh.place(location);
+            tower.getMesh().place(location);
             tower.setLocation(location);
             return true;
         }
         return false;
+    }
+
+    /**
+     * Removes the tower at the location. Fails silently if the location isn't in the layout or
+     * if there isn't a tower at the location
+     * @param location the location of the tower (relative to the world's 0, 0)
+     * @return if the tower was removed
+     */
+    public @Nullable Tower removeTower(Location location) {
+        if (!mesh.contains(location)) return null;
+        Vector3 relLoc = mesh.toRelativeLocation(location);
+        if (grid.get(relLoc.x, relLoc.z) instanceof Tower tower) {
+            grid.remove(relLoc.x, relLoc.z);
+            return tower;
+        }
+        return null;
     }
 
     public String getName() {

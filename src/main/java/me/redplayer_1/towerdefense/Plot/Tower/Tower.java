@@ -1,15 +1,19 @@
 package me.redplayer_1.towerdefense.Plot.Tower;
 
+import me.redplayer_1.towerdefense.Plot.Layout.GridItem;
 import me.redplayer_1.towerdefense.TDPlayer;
 import me.redplayer_1.towerdefense.TowerDefense;
 import me.redplayer_1.towerdefense.Util.BlockMesh;
+import me.redplayer_1.towerdefense.Util.ItemUtils;
 import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -17,7 +21,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.Nullable;
 
-public class Tower {
+public class Tower extends GridItem {
     private static final NamespacedKey ID_KEY = new NamespacedKey(TowerDefense.INSTANCE, "tower_id");
     public final String name;
     private @Nullable Location location;
@@ -27,6 +31,7 @@ public class Tower {
     private BlockMesh mesh;
 
     public Tower(String name, ItemStack item, int range, int damage, BlockMesh mesh) {
+        super(mesh.width, mesh.depth);
         this.name = name;
         setItem(item);
         this.range = range;
@@ -39,6 +44,17 @@ public class Tower {
      */
     public int attack(/* Enemy */) {
         return 0; /* damage to deal*/
+    }
+
+
+    @Override
+    public void add() {
+        super.add();
+    }
+
+    @Override
+    public void remove() {
+        super.remove();
     }
 
     public void setItem(ItemStack item) {
@@ -110,6 +126,20 @@ public class Tower {
                     event.getPlayer().playSound(event.getPlayer(), Sound.BLOCK_ANCIENT_DEBRIS_FALL, 1, .83f);
                     MessageUtils.log(event.getPlayer(), "This item has an invalid tower id! Please report to staff", LogLevel.ERROR);
                     event.setCancelled(true);
+                }
+            }
+        }
+
+        @EventHandler
+        public void onBlockClick(BlockDamageEvent event) {
+            TDPlayer player = TDPlayer.of(event.getPlayer());
+            if (player != null) {
+                Tower tower = player.getPlot().getLayout().removeTower(event.getBlock().getLocation());
+                if (tower != null) {
+                    BlockMesh mesh = tower.getMesh();
+                    assert mesh.getBottomLeft() != null; // tower must be placed if it is in the layout's grid
+                    mesh.forEachBlock(mesh.getBottomLeft(), (loc, vec) -> loc.getWorld().setType(loc, Material.AIR));
+                    ItemUtils.giveOrDrop(player.getPlayer(), tower.getItem());
                 }
             }
         }

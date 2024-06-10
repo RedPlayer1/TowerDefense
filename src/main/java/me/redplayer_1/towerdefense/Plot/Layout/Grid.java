@@ -8,7 +8,11 @@ import java.util.function.Function;
  * Represents a 2d (x, y) grid of blocks that can be occupied with grid items
  */
 public class Grid {
-    private GridItem[][] items; // [y][x]
+    private final GridItem[][] items; // [y][x]
+
+    public Grid(int width, int height) {
+        items = new GridItem[height][width];
+    }
 
     /**
      * Add an item to the grid
@@ -25,6 +29,7 @@ public class Grid {
         ItemReference ref = new ItemReference(x, y);
         forItemArea(x, y, (i) -> ref);
         items[y][x] = item;
+        item.add();
     }
 
     /**
@@ -34,11 +39,13 @@ public class Grid {
      * @throws IndexOutOfBoundsException if the (x, y) coords are not within the grid
      */
     public void remove(int x, int y) {
-        GridItem item = items[y][x];
-        if (item instanceof ItemReference ref) {
-            item = items[ref.y][ref.x];
+        if (items[y][x] instanceof ItemReference ref) {
+            x = ref.x;
+            y = ref.y;
         }
+        GridItem removedItem = items[y][x];
         forItemArea(x, y, (i) -> null);
+        removedItem.remove();
     }
 
     /**
@@ -87,14 +94,11 @@ public class Grid {
         return x >= 0 && y >= 0 && x + width < items[0].length && y + height < items.length;
     }
 
-    private boolean isWithinBounds(int x, int y) {
-        return x >= 0 && y >= 0 && x < items[0].length && y < items.length;
-    }
-
     /**
      * Refers to a grid item
      */
     private static class ItemReference extends GridItem {
+        // the referenced item's x and y coords
         public final int x, y;
 
         public ItemReference(int x, int y) {

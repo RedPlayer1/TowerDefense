@@ -16,9 +16,12 @@ import java.util.function.BiConsumer;
  * A rectangular area of blocks
  */
 public class BlockMesh {
-    public final int width; // x
-    public final int depth; // z
-    public final int height; // y
+    /** x length */
+    public final int width;
+    /** z length */
+    public final int depth;
+    /** y length */
+    public final int height;
     private final Material[][][] mesh; // [y][z][x]
     private @Nullable Location bottomLeft;
 
@@ -85,7 +88,7 @@ public class BlockMesh {
     /**
      * @return a copy of the bottom left corner of the block mesh (if it exists)
      */
-    public @Nullable Location getBottomLeft() {
+    public Location getBottomLeft() {
         return bottomLeft != null? bottomLeft.clone() : null;
     }
 
@@ -164,9 +167,9 @@ public class BlockMesh {
     }
 
     /**
-     * @return the location's location relative to the mesh's bottom-left coordinate. returns null if mesh isn't placed
+     * @return the location's location relative to the mesh's bottom-left coordinate or null if mesh isn't placed
      */
-    public @Nullable Vector3 toRelativeLocation(Location location) {
+    public Vector3 toRelativeLocation(Location location) {
         if (bottomLeft == null) return null;
         return new Vector3(location.getBlockX() - bottomLeft.getBlockX(),
                 location.getBlockY() - bottomLeft.getBlockY(),

@@ -7,6 +7,7 @@ import me.redplayer_1.towerdefense.Plot.Layout.Layout;
 import me.redplayer_1.towerdefense.Plot.Layout.LayoutEditor;
 import me.redplayer_1.towerdefense.Plot.Layout.Layouts;
 import me.redplayer_1.towerdefense.Plot.Plot;
+import me.redplayer_1.towerdefense.Plot.Tower.Tower;
 import me.redplayer_1.towerdefense.Plot.Tower.Towers;
 import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MeshEditor;
@@ -55,6 +56,7 @@ public final class TowerDefense extends JavaPlugin {
         PluginManager pluginManager = getServer().getPluginManager();
         pluginManager.registerEvents(new EventListener(), this);
         pluginManager.registerEvents(new LayoutEditor.EventListener(), this);
+        pluginManager.registerEvents(new Tower.EventListener(), this);
 
         // Load apply main config values
         Plot.loadConfigValues(mainConfig.getConfig());

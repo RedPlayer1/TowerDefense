@@ -3,7 +3,7 @@ package me.redplayer_1.towerdefense.Plot.Layout;
 /**
  * Represents something that can be added to a Layout's grid (i.e. added to the layout)
  */
-public abstract class GridItem {
+public class GridItem {
     public final int width; // x length
     public final int height; // y length
 
@@ -30,10 +30,10 @@ public abstract class GridItem {
     /**
      * Called when this object is added to a grid
      */
-    void add() { }
+    public void add() { }
 
     /**
      * Called when this object is removed from a grid
      */
-    void remove() { }
+    public void remove() { }
 }
