@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedList;
 
-public class Layouts {
+public final class Layouts {
     private static final LinkedList<Layout> templates = new LinkedList<>();
 
     /**

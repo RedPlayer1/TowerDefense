@@ -60,7 +60,9 @@ public class BlockMesh {
     public boolean canPlace(Location bottomLeft) {
         AtomicBoolean result = new AtomicBoolean(true);
         forEachBlock(bottomLeft, (loc, rel) -> {
-            if (loc.getWorld().getType(loc) != Material.AIR) result.set(false);
+            if (loc.getWorld().getType(loc) != Material.AIR) {
+                result.set(false);
+            }
         });
         return result.get();
     }

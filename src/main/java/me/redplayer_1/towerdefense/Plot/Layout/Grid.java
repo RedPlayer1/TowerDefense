@@ -2,6 +2,8 @@ package me.redplayer_1.towerdefense.Plot.Layout;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 /**
@@ -15,21 +17,46 @@ public class Grid {
     }
 
     /**
-     * Add an item to the grid
+     * Add an item to the grid. If another item's area overlaps this item's, the operation will fail.
      * @param item the item to add
      * @param x the bottom left x-coordinate of the item
      * @param y the bottom left y-coordinate of the item
+     * @return if the item could be added
      * @throws IndexOutOfBoundsException if the item doesn't fit in the grid
      */
-    public void add(GridItem item, int x, int y) {
+    public boolean add(GridItem item, int x, int y) {
         if (!isWithinBounds(x, y, item.width, item.height)) {
-            throw new IndexOutOfBoundsException();
+            throw new IndexOutOfBoundsException("Item @ (" + x + ", " + y + ") w: " + item.width + ", h: " + item.height + " doesn't fit in the grid");
         }
+        if (!canAdd(item, x, y)) return false;
         // fill the item's occupied area with references to it's bottom-left corner
         ItemReference ref = new ItemReference(x, y);
-        forItemArea(x, y, (i) -> ref);
+        forItemArea(x, y, item.width, item.height, (i) -> ref);
         items[y][x] = item;
         item.add();
+        return true;
+    }
+
+    /**
+     * Checks if the item can be added to the grid without interfering with other items
+     * @param item the item to check
+     * @param x the x-coordinate of the test location
+     * @param y the y-coordinate of the test location
+     * @return if the item can be safely added to the grid
+     */
+    public boolean canAdd(GridItem item, int x, int y) {
+        AtomicBoolean foundOther = new AtomicBoolean();
+        AtomicInteger count = new AtomicInteger();
+        forItemArea(x, y, item.width, item.height, (i) -> {
+            count.incrementAndGet();
+            if (i != null) {
+                foundOther.set(true);
+            }
+            return i;
+        });
+        // count will be less than the area if some locations were off the grid
+        System.out.println(this);
+        return !foundOther.get() && count.get() == item.width * item.height;
     }
 
     /**
@@ -64,7 +91,8 @@ public class Grid {
     }
 
     /**
-     * Gets the item at an (x, y) coordinate
+     * Gets the item at an (x, y) coordinate. If the item is an {@link ItemReference ItemReference}, the item it refers
+     * to will be returned.
      * @param x the item's x-coordinate
      * @param y the item's y-coordinate
      * @return the item at that location in the grid
@@ -82,16 +110,51 @@ public class Grid {
      * Loops over all the grid cells that the item covers and sets its value to that returned by {@code iter}
      */
     private void forItemArea(int x, int y, Function<@Nullable GridItem, @Nullable GridItem> iter) {
-        GridItem item = items[y][x];
-        for (int i = 0; i < item.height; i++) {
-            for (int j = 0; j < item.width; j++) {
+        GridItem item = get(x, y);
+        if (item == null) return;
+        forItemArea(x, y, item.width, item.height, iter);
+    }
+
+    /**
+     * Loops over all the grid cells within the provided area and sets their values to that returned by {@code iter}.
+     * If some of the cells are outside the grid, they will be skipped.
+     * @param x the starting x-coordinate
+     * @param y the starting y-coordinate
+     * @param width the width of the area
+     * @param height the height of the area
+     * @param iter the function to run for each item
+     */
+    private void forItemArea(int x, int y, int width, int height, Function<@Nullable GridItem, @Nullable GridItem> iter) {
+        for (int i = 0; i < height && i + y < items.length; i++) {
+            for (int j = 0; j < width && j + x < items[0].length; j++) {
                 items[y + i][x + j] = iter.apply(items[y + i][x + j]);
             }
         }
     }
 
     private boolean isWithinBounds(int x, int y, int width, int height) {
-        return x >= 0 && y >= 0 && x + width < items[0].length && y + height < items.length;
+        return x >= 0 && y >= 0 && x + width <= items[0].length && y + height <= items.length;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder str = new StringBuilder("Grid (" + items[0].length + ", " + items.length + ")\n");
+        for (int y = 0; y < items.length; y++) {
+            str.append("y").append(y);
+            for (int x = 0; x < items[0].length; x++) {
+                str.append(' ');
+                GridItem item = items[y][x];
+                if (item == null) {
+                    str.append('-');
+                } else if (item instanceof ItemReference) {
+                    str.append('*');
+                } else {
+                    str.append('i');
+                }
+            }
+            str.append('\n');
+        }
+        return str.toString();
     }
 
     /**

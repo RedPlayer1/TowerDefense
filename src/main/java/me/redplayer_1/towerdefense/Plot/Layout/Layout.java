@@ -22,9 +22,9 @@ public class Layout {
     public static String defaultLayout = null;
 
     private final String name;
-    private World world;
+    private final World world;
     private final Vector3 startLoc; // relative to bottomLeft
-    private final BlockMesh mesh;
+    private final BlockMesh mesh; // the prebuilt blocks in the layout
     private final Grid grid;
     private final Direction[] path;
     private LinkedList<Enemy> enemies;
@@ -36,7 +36,7 @@ public class Layout {
      * Creates a new layout.
      * @param name the name of the layout
      * @param startLoc the starting location for all enemies
-     * @param mesh the mesh for the layout (must be placed)
+     * @param mesh the mesh for the layout (<b>must be placed</b>)
      * @param path the path that enemies will take
      * @see Layouts
      */
@@ -51,6 +51,7 @@ public class Layout {
         grid = new Grid(SIZE, SIZE);
         this.path = path;
         addPathToGrid();
+        this.towers = new LinkedList<>();
         this.towers.addAll(Arrays.asList(towers));
     }
 
@@ -120,8 +121,13 @@ public class Layout {
      * @return if the Tower can be placed in that location
      */
     public boolean placeTower(Tower tower, Location location) {
-        if (mesh.canPlace(location)) {
-            tower.getMesh().place(location);
+        BlockMesh mesh = tower.getMesh();
+        GridItem towerItem = new Tower.Item(tower, mesh.width, mesh.depth);
+        Vector3 relLoc = this.mesh.toRelativeLocation(location);
+        if (mesh.canPlace(location) && grid.canAdd(towerItem, relLoc.x, relLoc.z)) {
+            towers.add(tower);
+            grid.add(towerItem, relLoc.x, relLoc.z);
+            mesh.place(location);
             tower.setLocation(location);
             return true;
         }
@@ -135,11 +141,14 @@ public class Layout {
      * @return if the tower was removed
      */
     public @Nullable Tower removeTower(Location location) {
-        if (!mesh.contains(location)) return null;
-        Vector3 relLoc = mesh.toRelativeLocation(location);
-        if (grid.get(relLoc.x, relLoc.z) instanceof Tower tower) {
-            grid.remove(relLoc.x, relLoc.z);
-            return tower;
+        Vector3 rel = mesh.toRelativeLocation(location);
+        System.out.println("REMOVE TOWER @" + MessageUtils.locationToString(location) + " " + rel);
+        // check if the location is within the layout
+        if (rel.x < 0 || rel.y <= 0 || rel.z < 0 || rel.x >= mesh.width || rel.z >= mesh.depth) return null;
+        if (grid.get(rel.x, rel.z) instanceof Tower.Item item) {
+            grid.remove(rel.x, rel.z);
+            System.out.println("Tower found & removed @" + rel);
+            return item.getTower();
         }
         return null;
     }
@@ -158,6 +167,10 @@ public class Layout {
 
     public Direction[] getPath() {
         return path;
+    }
+
+    public Grid getGrid() {
+        return grid;
     }
 
     /**

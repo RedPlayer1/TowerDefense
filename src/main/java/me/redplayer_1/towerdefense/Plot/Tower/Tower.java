@@ -59,8 +59,10 @@ public class Tower extends GridItem {
 
     public void setItem(ItemStack item) {
         ItemMeta meta = item.getItemMeta();
+        meta.displayName(MessageUtils.asMiniMessage(name)); // TODO: have plain & colored name
         meta.getPersistentDataContainer().set(ID_KEY, PersistentDataType.STRING, name);
         item.setItemMeta(meta);
+        item.setAmount(1);
         this.item = item;
     }
 
@@ -103,6 +105,25 @@ public class Tower extends GridItem {
         this.mesh = mesh;
     }
 
+    /**
+     * Denotes that the item in a grid is a tower
+     */
+    public static class Item extends GridItem {
+        private final Tower tower;
+        /**
+         * {@link GridItem#GridItem(int, int) GridItem(width, height)}
+         * @param tower the tower that this item represents
+         */
+        public Item(Tower tower, int width, int height) {
+            super(width, height);
+            this.tower = tower;
+        }
+
+        public Tower getTower() {
+            return tower;
+        }
+    }
+
     public static class EventListener implements Listener {
         @EventHandler
         public void onBlockPlace(BlockPlaceEvent event) {
@@ -118,9 +139,11 @@ public class Tower extends GridItem {
                 String id = pdc.get(ID_KEY, PersistentDataType.STRING);
                 Tower tower = Towers.get(id);
                 if (tower != null) {
+                    Location blockLoc = event.getBlockPlaced().getLocation();
+                    blockLoc.getWorld().setType(blockLoc, Material.AIR);
                     // cancel the event if the new tower would overlap with existing ones or isn't in the player's plot
                     event.setCancelled(
-                            !tdPlayer.getPlot().getLayout().placeTower(tower, event.getBlock().getLocation())
+                            !tdPlayer.getPlot().getLayout().placeTower(tower, blockLoc)
                     );
                 } else {
                     event.getPlayer().playSound(event.getPlayer(), Sound.BLOCK_ANCIENT_DEBRIS_FALL, 1, .83f);

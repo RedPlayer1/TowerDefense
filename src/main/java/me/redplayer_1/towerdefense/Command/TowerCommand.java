@@ -175,9 +175,8 @@ public class TowerCommand  extends Command {
                 } else {
                     Tower t = Towers.get(args[1]);
                     if (t != null) {
-                        if (player.getInventory().addItem(t.getItem()).isEmpty()) {
-                            log(player, "Your inventory is full!", LogLevel.WARN);
-                        }
+                        player.getInventory().addItem(t.getItem());
+                        log(player, "Gave 1 " + t.name, LogLevel.SUCCESS);
                     } else {
                         log(player, "Invalid tower name", LogLevel.ERROR);
                     }
