@@ -2,9 +2,11 @@ package me.redplayer_1.towerdefense.Plot;
 
 import me.redplayer_1.towerdefense.Exception.NoLayoutFoundException;
 import me.redplayer_1.towerdefense.Exception.NotEnoughPlotSpaceException;
+import me.redplayer_1.towerdefense.Plot.Layout.GridItem;
 import me.redplayer_1.towerdefense.Plot.Layout.Layout;
 import me.redplayer_1.towerdefense.Plot.Layout.Layouts;
-import me.redplayer_1.towerdefense.TowerDefense;
+import me.redplayer_1.towerdefense.Plot.Tower.Tower;
+import me.redplayer_1.towerdefense.Plot.Tower.Towers;
 import me.redplayer_1.towerdefense.Util.BlockMesh;
 import me.redplayer_1.towerdefense.Util.LocationUtils;
 import me.redplayer_1.towerdefense.Util.LogLevel;
@@ -14,8 +16,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.HashMap;
+import java.util.LinkedList;
 
 /**
  * A square area (width & length = Layout.SIZE, y is undefined) consisting of a bottom layer of filler blocks, then
@@ -57,7 +63,7 @@ public class Plot {
      * (layout param is null) but it isn't set
      */
     public Plot(@Nullable String layoutName) throws NotEnoughPlotSpaceException, NoLayoutFoundException {
-        if (gridOrigin == null) {
+        if (gridOrigin == null || gridOrigin.getWorld() == null) {
             throw new NotEnoughPlotSpaceException("Grid origin not initialized");
         }
         if (usedPlots > plotGridSize * plotGridSize) {
@@ -96,7 +102,6 @@ public class Plot {
 
     /**
      * Clears the plot from the grid, including all player towers
-     *
      * @param clearBlocks if the blocks that represented the plot should be cleared (set to air)
      */
     public void clear(boolean clearBlocks) {
@@ -154,19 +159,71 @@ public class Plot {
      */
     public void serialize(ConfigurationSection section) {
         section.set("layout", layout.getName());
+
+        // map tower's name to its x,y location in the layout's grid
+        HashMap<String, LinkedList<String>> towerData = new HashMap<>();
+        System.out.println("SAVING LAYOUT GRID: " + layout.getGrid());
+        final GridItem[][] gridItems = layout.getGrid().getInternalArray();
+        for (int y = 0; y < gridItems.length; y++) {
+            for (int x = 0; x < gridItems[0].length; x++) {
+                GridItem item = gridItems[y][x];
+                if (item instanceof Tower.Item towerItem) {
+                    System.out.println("FOUND TOWER: " + towerItem.getTower().name + " @" + x + ", " + y);
+                    String name = towerItem.getTower().name;
+                    if (!towerData.containsKey(name)) {
+                        towerData.put(name, new LinkedList<>());
+                    }
+                    towerData.get(name).add(x + "," + y);
+                }
+            }
+        }
+        section.set("towers", towerData);
     }
 
     /**
-     * Deserialize a plot from the ConfigurationSection
+     * Deserialize a plot from a ConfigurationSection. Invalid tower data will be logged to the console while
+     * unrecoverable errors will be thrown.
      * @param section the section containing the serialized plot
      * @return the deserialized plot
      * @throws NotEnoughPlotSpaceException if the new plot cannot be created because there isn't enough room in the grid
      * @throws NoLayoutFoundException if the plot's layout doesn't exist or if the config value is missing
+     * @throws InvalidConfigurationException if a required Yaml section/value doesn't exist
      */
-    public static Plot deserialize(ConfigurationSection section) throws NotEnoughPlotSpaceException, NoLayoutFoundException {
+    public static Plot deserialize(ConfigurationSection section) throws NotEnoughPlotSpaceException, NoLayoutFoundException, InvalidConfigurationException {
+        // get layout & create plot
         String layoutName = section.getString("layout");
         if (!Layouts.isTemplate(layoutName)) throw new NoLayoutFoundException("Layout name isn't in the config");
-        return new Plot(layoutName);
+        Plot plot = new Plot(layoutName);
+        // load & place towers
+        ConfigurationSection towerSection = section.getConfigurationSection("towers");
+        if (towerSection == null) {
+            throw new InvalidConfigurationException("Config section for towers doesn't exist");
+        }
+        for (String key : towerSection.getKeys(false)) {
+            Tower tower = Towers.get(key);
+            if (tower != null) {
+                for (String locStr : towerSection.getStringList(key)) {
+                    String[] coords = locStr.split(",");
+                    if (coords.length == 2) {
+                        try {
+                            if (!plot.layout.placeTower(tower, Integer.parseInt(coords[0]), Integer.parseInt(coords[1]))) {
+                                MessageUtils.logConsole("Couldn't place tower from plot config", LogLevel.ERROR);
+                            }
+                        } catch (NumberFormatException e) {
+                            MessageUtils.logConsole(
+                                    "Coordinates for tower in plot config aren't valid integers",
+                                    LogLevel.WARN
+                            );
+                        }
+                    } else {
+                        MessageUtils.logConsole("Plot contains tower with bad coordinates: " + key, LogLevel.WARN);
+                    }
+                }
+            } else {
+                MessageUtils.logConsole("Plot contains non-existent tower named \"" + key + "\"", LogLevel.WARN);
+            }
+        }
+        return plot;
     }
 
     public static void setPlotGridOrigin(Location origin) {
@@ -211,7 +268,6 @@ public class Plot {
 
     public static void loadConfigValues(ConfigurationSection section) {
         String filler_type = section.getString("empty_plot_filler_type");
-        ConfigurationSection grid_origin = section.getConfigurationSection("plot_grid_origin");
         int size = section.getInt("plot_grid_size");
 
         if (filler_type != null) {
@@ -219,22 +275,19 @@ public class Plot {
                 Material material = Material.valueOf(filler_type);
                 Plot.setEmptyPlotFillerType(material);
             } catch (IllegalArgumentException e) {
-                MessageUtils.log(Bukkit.getConsoleSender(), "Bad material name for \"empty_plot_filler_type\" in Config.yml", LogLevel.WARN);
+                MessageUtils.logConsole("Bad material name for \"empty_plot_filler_type\" in Config.yml", LogLevel.WARN);
             }
         }
-        if (grid_origin != null) {
-            Bukkit.getScheduler().runTaskLater(TowerDefense.INSTANCE, () -> {
-                Location origin = LocationUtils.deserialize(grid_origin);
-                if (origin != null) {
-                    gridOrigin = origin;
-                } else {
-                    MessageUtils.log(Bukkit.getConsoleSender(), "Bad location data for \"grid_origin\" in Config.yml", LogLevel.WARN);
-                }
-            }, 10);
+        Location origin = LocationUtils.deserialize(section.getConfigurationSection("plot_grid_origin"));
+        if (origin != null) {
+            gridOrigin = origin;
+        } else {
+            MessageUtils.logConsole("Bad location data for \"grid_origin\" in Config.yml", LogLevel.WARN);
         }
         if (size != 0) {
             resizePlotGrid(size);
         }
+
     }
 
     public static void saveConfigValues(ConfigurationSection section) {

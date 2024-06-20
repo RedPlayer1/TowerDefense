@@ -40,7 +40,7 @@ public final class TowerDefense extends JavaPlugin {
             layoutTemplates = new Config("LayoutTemplates");
             towerTemplates = new Config("TowerTemplates");
         } catch (IOException | InvalidConfigurationException e) {
-            MessageUtils.log(Bukkit.getConsoleSender(), "Couldn't loading configuration files!", LogLevel.CRITICAL);
+            MessageUtils.logConsole("Couldn't loading configuration files!", LogLevel.CRITICAL);
             getLogger().severe(e.getMessage());
             Bukkit.getPluginManager().disablePlugin(this);
             return;
@@ -64,11 +64,11 @@ public final class TowerDefense extends JavaPlugin {
         // Load layout templates
         Layouts.loadLayoutTemplates(layoutTemplates.getConfig());
         Layout.loadConfigValues(mainConfig.getConfig());
-        MessageUtils.log(Bukkit.getConsoleSender(), "Loaded " + Layouts.getTemplates().size() + " layout templates", LogLevel.SUCCESS);
+        MessageUtils.logConsole("Loaded " + Layouts.getTemplates().size() + " layout templates", LogLevel.SUCCESS);
 
         // Load tower templates
         Towers.deserialize(towerTemplates.getConfig());
-        MessageUtils.log(Bukkit.getConsoleSender(), "Loaded " + Towers.getTowers().size() + " tower templates", LogLevel.SUCCESS);
+        MessageUtils.logConsole("Loaded " + Towers.getTowers().size() + " tower templates", LogLevel.SUCCESS);
     }
 
     @Override

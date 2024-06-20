@@ -3,6 +3,8 @@ package me.redplayer_1.towerdefense;
 import me.redplayer_1.towerdefense.Exception.NoLayoutFoundException;
 import me.redplayer_1.towerdefense.Exception.NotEnoughPlotSpaceException;
 import me.redplayer_1.towerdefense.Plot.Plot;
+import me.redplayer_1.towerdefense.Util.LogLevel;
+import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -31,19 +33,26 @@ public class TDPlayer {
 
         if (checkForExisting) {
             File config = new File(PLAYER_DATA_DIRECTORY + player.getUniqueId() + ".yml");
+            System.out.println("TDPLAYER CREATE w/ CHECKFOREXISTING");
             if (config.exists()) {
                 try {
                     TDPlayer tdPlayer = deserialize(new Config(config));
                     foundConfig = true;
-
+                    System.out.println("TDPLAYER HAD VALID CONFIG");
                     plot = tdPlayer.plot;
                     money = tdPlayer.money;
                     prestige = tdPlayer.prestige;
                     multiplier = tdPlayer.multiplier;
-                } catch (IOException | InvalidConfigurationException ignored) { }
+                } catch (IOException | InvalidConfigurationException e) {
+                    MessageUtils.logConsole(
+                            "An error occurred whilst attempting to load player data for \"" + player.getName() + "\": " + e,
+                            LogLevel.WARN
+                    );
+                }
             }
         }
         if (!foundConfig) {
+            System.out.println("NO CONFIG FOUND FOR PLAYER -> CREATING DEFAULT");
             money = 0;
             prestige = 0;
             multiplier = 0;
@@ -85,33 +94,31 @@ public class TDPlayer {
 
     public void serialize() {
         try {
-            Config config = new Config(player.getUniqueId().toString());
+            Config config = new Config(new File(PLAYER_DATA_DIRECTORY + player.getUniqueId() + ".yml"));
             FileConfiguration fConfig = config.getConfig();
 
             fConfig.set("money", money);
             fConfig.set("prestige", prestige);
             fConfig.set("multiplier", multiplier);
             plot.serialize(fConfig.createSection("plot"));
-
             config.save();
         } catch (IOException | InvalidConfigurationException e) {
-            Bukkit.getLogger().severe(
-                    "Error whilst saving TDPlayer of Player " + player.getName()
+            MessageUtils.log(
+                    Bukkit.getConsoleSender(),
+                    "Error whilst saving TDPlayer of \"" + player.getName() + "\"",
+                    LogLevel.CRITICAL
             );
         }
     }
 
-    public static TDPlayer deserialize(Config config) throws NotEnoughPlotSpaceException, NoLayoutFoundException {
+    public static TDPlayer deserialize(Config config) throws NotEnoughPlotSpaceException, NoLayoutFoundException, InvalidConfigurationException {
         FileConfiguration fConfig = config.getConfig();
         TDPlayer player = new TDPlayer(
                 Bukkit.getPlayer(UUID.fromString(config.getFile().getName().replace(".yml", ""))),
                 false
         );
-        try {
-            player.plot = Plot.deserialize(fConfig.getConfigurationSection("plot"));
-        } catch (NotEnoughPlotSpaceException e) {
-            throw new NotEnoughPlotSpaceException();
-        }
+        System.out.println("TDPLAYER DESERIALIZE CALLED");
+        player.plot = Plot.deserialize(fConfig.getConfigurationSection("plot"));
         player.money = fConfig.getInt("money", 0);
         player.prestige = fConfig.getInt("prestige", 0);
         player.multiplier = fConfig.getInt("multiplier", 0);

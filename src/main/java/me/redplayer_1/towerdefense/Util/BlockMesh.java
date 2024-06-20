@@ -100,6 +100,9 @@ public class BlockMesh {
      * @param bottomLeft the bottom left location of the mesh
      */
     public void setBottomLeft(@Nullable Location bottomLeft) {
+        if (bottomLeft != null) {
+            bottomLeft.set(bottomLeft.getBlockX(), bottomLeft.getBlockY(), bottomLeft.getBlockZ());
+        }
         this.bottomLeft = bottomLeft;
     }
 
@@ -199,7 +202,7 @@ public class BlockMesh {
      * If a section with this name already exists in the section, it is overwritten.
      *
      * @param rootSection the root section for the mesh to be stored
-     * @param meshName    the name of this mesh in the config section (may contain spaces)
+     * @param meshName the name of this mesh in the config section (may contain spaces)
      */
     public void serialize(ConfigurationSection rootSection, String meshName) {
         ConfigurationSection section = rootSection.createSection(meshName);

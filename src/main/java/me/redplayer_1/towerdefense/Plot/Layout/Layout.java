@@ -5,8 +5,6 @@ import me.redplayer_1.towerdefense.TowerDefense;
 import me.redplayer_1.towerdefense.Util.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Entity;
@@ -22,7 +20,6 @@ public class Layout {
     public static String defaultLayout = null;
 
     private final String name;
-    private final World world;
     private final Vector3 startLoc; // relative to bottomLeft
     private final BlockMesh mesh; // the prebuilt blocks in the layout
     private final Grid grid;
@@ -40,19 +37,17 @@ public class Layout {
      * @param path the path that enemies will take
      * @see Layouts
      */
-    public Layout(String name, Vector3 startLoc, BlockMesh mesh, Direction[] path, Tower... towers) {
+    public Layout(String name, Vector3 startLoc, BlockMesh mesh, Direction[] path) {
         if (mesh.getBottomLeft() == null) {
             throw new IllegalArgumentException("Bottom left must not be null (mesh needs to be placed first)");
         }
         this.name = name;
-        world = null;
         this.startLoc = startLoc;
         this.mesh = mesh;
         grid = new Grid(SIZE, SIZE);
         this.path = path;
         addPathToGrid();
         this.towers = new LinkedList<>();
-        this.towers.addAll(Arrays.asList(towers));
     }
 
     /**
@@ -81,11 +76,16 @@ public class Layout {
     }
 
     public void stopSpawner() {
-        spawner.cancel();
+        if (spawner != null) {
+            spawner.cancel();
+        }
     }
 
     public void spawnEnemy() {
-        Entity e = world.spawnEntity(new Location(world, 0, 0, 0), EntityType.BLOCK_DISPLAY);
+        Entity e = mesh.getBottomLeft().getWorld().spawnEntity(
+                new Location(mesh.getBottomLeft().getWorld(), 0, 0, 0),
+                EntityType.BLOCK_DISPLAY
+        );
         enemies.add(new Enemy(e, 20, startLoc.add(mesh.getBottomLeft()).toLocation(), path));
     }
 
@@ -100,7 +100,7 @@ public class Layout {
             // TODO: use wave restart method?
             enemies.removeFirst().kill();
         }
-        mesh.forEachBlock(mesh.getBottomLeft(), (loc, vec) -> world.setType(loc, Material.AIR));
+        mesh.destroy();
         mesh.place(bottomLeft);
         startSpawner();
     }
@@ -110,28 +110,50 @@ public class Layout {
      * Any operations preformed on the object afterward are will have undefined behavior
      */
     public void remove() {
-        spawner.cancel();
+        stopSpawner();
         mesh.destroy();
+        for (Tower tower : towers) {
+            tower.getMesh().destroy();
+        }
     }
 
     /**
      * Places the Tower at a location
      * @param tower the tower to place
      * @param location the location to place the Tower
-     * @return if the Tower can be placed in that location
+     * @return if the tower was placed
      */
     public boolean placeTower(Tower tower, Location location) {
-        BlockMesh mesh = tower.getMesh();
-        GridItem towerItem = new Tower.Item(tower, mesh.width, mesh.depth);
+        BlockMesh towerMesh = tower.getMesh();
+        GridItem towerItem = new Tower.Item(tower, towerMesh.width, towerMesh.depth);
         Vector3 relLoc = this.mesh.toRelativeLocation(location);
-        if (mesh.canPlace(location) && grid.canAdd(towerItem, relLoc.x, relLoc.z)) {
+        if (towerMesh.canPlace(location) && grid.canAdd(towerItem, relLoc.x, relLoc.z)) {
             towers.add(tower);
             grid.add(towerItem, relLoc.x, relLoc.z);
-            mesh.place(location);
+            towerMesh.place(location);
             tower.setLocation(location);
             return true;
         }
         return false;
+    }
+
+    /**
+     * Place a tower using the layout's grid to provide a location
+     * @param tower the tower to place
+     * @param gridX the grid x-coordinate to put the tower at
+     * @param gridY the grid y-coordinate to put the tower at
+     * @return if the tower was placed
+     */
+    public boolean placeTower(Tower tower, int gridX, int gridY) {
+        System.out.println("ATTEMPT TO PLACE TOWER @" + gridX + ", " + gridY);
+        return placeTower(tower, mesh.fromRelativeLocation(new Vector3(gridX, 1, gridY), mesh.getBottomLeft().getWorld()));
+    }
+
+    /**
+     * @return a list of all towers that are placed on the layout
+     */
+    public LinkedList<Tower> getTowers() {
+        return towers;
     }
 
     /**
@@ -144,10 +166,13 @@ public class Layout {
         Vector3 rel = mesh.toRelativeLocation(location);
         System.out.println("REMOVE TOWER @" + MessageUtils.locationToString(location) + " " + rel);
         // check if the location is within the layout
-        if (rel.x < 0 || rel.y <= 0 || rel.z < 0 || rel.x >= mesh.width || rel.z >= mesh.depth) return null;
+        if (rel.x < 0 || rel.y < 1 || rel.z < 0 || rel.x >= mesh.width || rel.z >= mesh.depth) return null;
         if (grid.get(rel.x, rel.z) instanceof Tower.Item item) {
             grid.remove(rel.x, rel.z);
             System.out.println("Tower found & removed @" + rel);
+            BlockMesh towerMesh = item.getTower().getMesh();
+            towerMesh.setBottomLeft(mesh.fromRelativeLocation(new Vector3(item.gridX, 1, item.gridY), location.getWorld()));
+            towerMesh.destroy();
             return item.getTower();
         }
         return null;
@@ -187,19 +212,24 @@ public class Layout {
 
 
     /**
-     * Deserializes a layout from the provided section
+     * Deserializes a layout from the provided config section
      * @param section the child section that the layout was serialized into (section name == layout name)
+     * @param meshBottomLeft the value to set the Layout's BlockMesh's bottomLeft to if it isn't already set
      * @return  the deserialized layout
      * @throws InvalidConfigurationException if required values/sections were missing
      */
-    public static Layout deserialize(ConfigurationSection section) throws InvalidConfigurationException {
+    public static Layout deserialize(ConfigurationSection section, @Nullable Location meshBottomLeft) throws InvalidConfigurationException {
         if (!section.isConfigurationSection("startLoc") || !section.isConfigurationSection("blockMesh")) {
             throw new InvalidConfigurationException("Serialized layout is missing required sections");
+        }
+        BlockMesh mesh = BlockMesh.deserialize(section.getConfigurationSection("blockMesh"));
+        if (mesh.getBottomLeft() == null) {
+            mesh.setBottomLeft(meshBottomLeft);
         }
         Layout layout = new Layout(
                 section.getName(),
                 Vector3.deserialize(section.getConfigurationSection("startLoc")),
-                BlockMesh.deserialize(section.getConfigurationSection("blockMesh")),
+                mesh,
                 section.getStringList("path").stream().map(Direction::valueOf).toArray(Direction[]::new)
         );
         if (section.contains("tickRate")) {
@@ -218,7 +248,7 @@ public class Layout {
             if (Layouts.isTemplate(defaultLayoutName)) {
                 Layout.defaultLayout = defaultLayoutName;
             } else {
-                MessageUtils.log(Bukkit.getConsoleSender(), "Invalid default layout \"" + defaultLayoutName + "\" in config", LogLevel.ERROR);
+                MessageUtils.logConsole("Invalid default layout \"" + defaultLayoutName + "\" in config", LogLevel.ERROR);
             }
         }
     }

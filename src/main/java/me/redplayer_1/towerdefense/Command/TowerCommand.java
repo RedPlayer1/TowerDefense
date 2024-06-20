@@ -114,7 +114,7 @@ public class TowerCommand  extends Command {
                 } else {
                     try {
                         ItemStack item = player.getInventory().getItemInMainHand();
-                        if (!item.getType().isBlock()) {
+                        if (!item.getType().isBlock() || item.getType() == Material.AIR) {
                             log(player, "A tower item must be a placeable block", LogLevel.ERROR);
                             return true;
                         }

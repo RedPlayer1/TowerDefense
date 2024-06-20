@@ -19,9 +19,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class Tower extends GridItem {
+public class Tower {
     private static final NamespacedKey ID_KEY = new NamespacedKey(TowerDefense.INSTANCE, "tower_id");
     public final String name;
     private @Nullable Location location;
@@ -30,8 +31,7 @@ public class Tower extends GridItem {
     private int damage;
     private BlockMesh mesh;
 
-    public Tower(String name, ItemStack item, int range, int damage, BlockMesh mesh) {
-        super(mesh.width, mesh.depth);
+    public Tower(@NotNull String name, @NotNull ItemStack item, int range, int damage, BlockMesh mesh) {
         this.name = name;
         setItem(item);
         this.range = range;
@@ -44,17 +44,6 @@ public class Tower extends GridItem {
      */
     public int attack(/* Enemy */) {
         return 0; /* damage to deal*/
-    }
-
-
-    @Override
-    public void add() {
-        super.add();
-    }
-
-    @Override
-    public void remove() {
-        super.remove();
     }
 
     public void setItem(ItemStack item) {
@@ -159,9 +148,6 @@ public class Tower extends GridItem {
             if (player != null) {
                 Tower tower = player.getPlot().getLayout().removeTower(event.getBlock().getLocation());
                 if (tower != null) {
-                    BlockMesh mesh = tower.getMesh();
-                    assert mesh.getBottomLeft() != null; // tower must be placed if it is in the layout's grid
-                    mesh.forEachBlock(mesh.getBottomLeft(), (loc, vec) -> loc.getWorld().setType(loc, Material.AIR));
                     ItemUtils.giveOrDrop(player.getPlayer(), tower.getItem());
                 }
             }

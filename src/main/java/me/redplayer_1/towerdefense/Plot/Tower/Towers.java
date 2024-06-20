@@ -1,13 +1,18 @@
 package me.redplayer_1.towerdefense.Plot.Tower;
 
 import me.redplayer_1.towerdefense.Exception.NoSuchTemplateException;
+import me.redplayer_1.towerdefense.Util.BlockMesh;
+import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MeshEditor;
+import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedList;
+import java.util.Objects;
 
 public final class Towers {
     // tower registry
@@ -41,7 +46,7 @@ public final class Towers {
             }
         }
         if (template == null) return null;
-        return new Tower(name, template.getItem(), template.getRange(), template.getDamage(), template.getMesh());
+        return new Tower(name, template.getItem(), template.getRange(), template.getDamage(), new BlockMesh(template.getMesh()));
     }
 
     /**
@@ -83,11 +88,37 @@ public final class Towers {
         }
     }
 
+    /**
+     * Serialize all registered towers
+     * @param section the section to put the towers' data in
+     */
     public static void serialize(ConfigurationSection section) {
-        // serialize all registered towers
+        for (Tower tower : towers) {
+            ConfigurationSection towerSec = section.createSection(tower.name);
+            towerSec.set("item", tower.getItem());
+            towerSec.set("range", tower.getRange());
+            towerSec.set("damage", tower.getDamage());
+            tower.getMesh().serialize(towerSec, "mesh");
+        }
     }
 
+    /**
+     * Deserialize towers and load them into the registry
+     * @param section the section containing all the towers' data
+     */
     public static void deserialize(ConfigurationSection section) {
-        // deserialize towers & load into towers list
+        for (String towerName : section.getKeys(false)) {
+            try {
+                add(new Tower(
+                        towerName,
+                        Objects.requireNonNull(section.getItemStack(towerName + ".item")),
+                        section.getInt(towerName + ".range"),
+                        section.getInt(towerName + ".damage"),
+                        BlockMesh.deserialize(section.getConfigurationSection(towerName + ".mesh"))
+                ));
+            } catch (InvalidConfigurationException | NullPointerException e) {
+                MessageUtils.logConsole("Invalid configuration for Tower \"" + towerName + "\"", LogLevel.WARN);
+            }
+        }
     }
 }

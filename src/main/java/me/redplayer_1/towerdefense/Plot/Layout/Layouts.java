@@ -1,9 +1,9 @@
 package me.redplayer_1.towerdefense.Plot.Layout;
 
+import me.redplayer_1.towerdefense.Plot.Plot;
 import me.redplayer_1.towerdefense.Util.BlockMesh;
 import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -54,6 +54,7 @@ public final class Layouts {
      * @param template the template to add
      */
     public static void addTemplate(Layout template) {
+        template.getMesh().setBottomLeft(null);
         templates.add(template);
     }
 
@@ -95,9 +96,9 @@ public final class Layouts {
             ConfigurationSection namedSection = section.getConfigurationSection(name);
             if (namedSection != null) {
                 try {
-                    templates.add(Layout.deserialize(namedSection));
+                    templates.add(Layout.deserialize(namedSection, Plot.getGridOrigin() /* needed for the layout to be created, could be any valid location */));
                 } catch (InvalidConfigurationException e) {
-                    MessageUtils.log(Bukkit.getConsoleSender(), "Invalid layout template for Layout \"" + name + "\". Skipping. . .", LogLevel.WARN);
+                    MessageUtils.logConsole("Invalid layout template for Layout \"" + name + "\". Skipping. . .", LogLevel.WARN);
                 }
             }
         }

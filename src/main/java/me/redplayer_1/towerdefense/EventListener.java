@@ -7,7 +7,6 @@ import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MeshEditor;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -53,8 +52,9 @@ public class EventListener implements Listener {
         TDPlayer tdPlayer = TDPlayer.of(p);
         if (tdPlayer != null) {
             tdPlayer.serialize();
+            tdPlayer.getPlot().clear(true);
         } else if (!TDPlayer.isPrivileged(event.getPlayer())){
-            MessageUtils.log(Bukkit.getConsoleSender(), "player left  without tdplayer (test consolesender)", LogLevel.WARN);
+            MessageUtils.logConsole("player left without TDPlayer data", LogLevel.WARN);
         }
     }
 }
