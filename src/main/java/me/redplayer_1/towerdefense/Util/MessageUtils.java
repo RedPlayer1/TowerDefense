@@ -2,6 +2,7 @@ package me.redplayer_1.towerdefense.Util;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.Nullable;
@@ -28,6 +29,15 @@ public final class MessageUtils {
      */
     public static void log(CommandSender target, String msg, LogLevel level) {
         target.sendRichMessage(level.format(msg));
+    }
+
+    /**
+     * Logs a message to the server console
+     * @param msg the message to send
+     * @param level the log level of the message
+     */
+    public static void logConsole(String msg, LogLevel level) {
+        log(Bukkit.getConsoleSender(), msg, level);
     }
 
     /**

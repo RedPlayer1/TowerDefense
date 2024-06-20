@@ -2,6 +2,7 @@ package me.redplayer_1.towerdefense.Plot.Layout;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -33,7 +34,8 @@ public class Grid {
         ItemReference ref = new ItemReference(x, y);
         forItemArea(x, y, item.width, item.height, (i) -> ref);
         items[y][x] = item;
-        item.add();
+        item.gridX = x;
+        item.gridY = y;
         return true;
     }
 
@@ -55,7 +57,6 @@ public class Grid {
             return i;
         });
         // count will be less than the area if some locations were off the grid
-        System.out.println(this);
         return !foundOther.get() && count.get() == item.width * item.height;
     }
 
@@ -70,9 +71,7 @@ public class Grid {
             x = ref.x;
             y = ref.y;
         }
-        GridItem removedItem = items[y][x];
         forItemArea(x, y, (i) -> null);
-        removedItem.remove();
     }
 
     /**
@@ -107,6 +106,31 @@ public class Grid {
     }
 
     /**
+     * Gets all the {@link GridItem items} in the grid. Every returned item is guaranteed to not be null or an instance
+     * of {@link ItemReference}.
+     */
+    public LinkedList<GridItem> getItems() {
+        LinkedList<GridItem> gridItems = new LinkedList<>();
+        for (GridItem[] row : items) {
+            for (GridItem item : row) {
+                if (item != null && !(item instanceof ItemReference)) {
+                    gridItems.add(item);
+                }
+            }
+        }
+        return gridItems;
+    }
+
+    /**
+     * @return the 2d array that contains all the grid's items (some may be null).
+     * @apiNote the array is structured so that if laid out on a graph, the rows represent the y-axis and the columns
+     * are on the x-axis (i.e. (x, y) == array[y][x])
+     */
+    public final GridItem[][] getInternalArray() {
+        return items;
+    }
+
+    /**
      * Loops over all the grid cells that the item covers and sets its value to that returned by {@code iter}
      */
     private void forItemArea(int x, int y, Function<@Nullable GridItem, @Nullable GridItem> iter) {
@@ -136,10 +160,14 @@ public class Grid {
         return x >= 0 && y >= 0 && x + width <= items[0].length && y + height <= items.length;
     }
 
+    /**
+     * Creates a string representation of the grid. Empty spaces are a {@code -}, references are {@code *} and all other
+     * items are shown as an {@code i}.
+     */
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder("Grid (" + items[0].length + ", " + items.length + ")\n");
-        for (int y = 0; y < items.length; y++) {
+        for (int y = items.length-1; y >= 0; y--) {
             str.append("y").append(y);
             for (int x = 0; x < items[0].length; x++) {
                 str.append(' ');
@@ -160,7 +188,7 @@ public class Grid {
     /**
      * Refers to a grid item
      */
-    private static class ItemReference extends GridItem {
+    public static class ItemReference extends GridItem {
         // the referenced item's x and y coords
         public final int x, y;
 

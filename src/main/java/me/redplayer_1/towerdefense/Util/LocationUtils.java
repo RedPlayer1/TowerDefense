@@ -2,6 +2,7 @@ package me.redplayer_1.towerdefense.Util;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,7 +17,8 @@ public class LocationUtils {
      */
     public static void serialize(Location location, ConfigurationSection rootSection, String sectionName) {
         ConfigurationSection section = rootSection.createSection(sectionName);
-        section.set("world", location.getWorld().getUID().toString());
+        World world = location.getWorld();
+        section.set("world", world != null? world.getUID().toString() : "null");
         section.set("x", location.getX());
         section.set("y", location.getY());
         section.set("z", location.getZ());
@@ -30,8 +32,9 @@ public class LocationUtils {
      */
     public static @Nullable Location deserialize(ConfigurationSection locationSection) {
         try {
+            String worldUUID = locationSection.getString("world", "null");
             return new Location(
-                    Bukkit.getWorld(UUID.fromString(locationSection.getString("world", ""))),
+                    worldUUID.equals("null")? null : Bukkit.getWorld(UUID.fromString(worldUUID)),
                     locationSection.getDouble("x"),
                     locationSection.getDouble("y"),
                     locationSection.getDouble("z")
