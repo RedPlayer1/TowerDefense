@@ -145,7 +145,6 @@ public class Layout {
      * @return if the tower was placed
      */
     public boolean placeTower(Tower tower, int gridX, int gridY) {
-        System.out.println("ATTEMPT TO PLACE TOWER @" + gridX + ", " + gridY);
         return placeTower(tower, mesh.fromRelativeLocation(new Vector3(gridX, 1, gridY), mesh.getBottomLeft().getWorld()));
     }
 
@@ -164,12 +163,10 @@ public class Layout {
      */
     public @Nullable Tower removeTower(Location location) {
         Vector3 rel = mesh.toRelativeLocation(location);
-        System.out.println("REMOVE TOWER @" + MessageUtils.locationToString(location) + " " + rel);
         // check if the location is within the layout
         if (rel.x < 0 || rel.y < 1 || rel.z < 0 || rel.x >= mesh.width || rel.z >= mesh.depth) return null;
         if (grid.get(rel.x, rel.z) instanceof Tower.Item item) {
             grid.remove(rel.x, rel.z);
-            System.out.println("Tower found & removed @" + rel);
             BlockMesh towerMesh = item.getTower().getMesh();
             towerMesh.setBottomLeft(mesh.fromRelativeLocation(new Vector3(item.gridX, 1, item.gridY), location.getWorld()));
             towerMesh.destroy();

@@ -33,12 +33,10 @@ public class TDPlayer {
 
         if (checkForExisting) {
             File config = new File(PLAYER_DATA_DIRECTORY + player.getUniqueId() + ".yml");
-            System.out.println("TDPLAYER CREATE w/ CHECKFOREXISTING");
             if (config.exists()) {
                 try {
                     TDPlayer tdPlayer = deserialize(new Config(config));
                     foundConfig = true;
-                    System.out.println("TDPLAYER HAD VALID CONFIG");
                     plot = tdPlayer.plot;
                     money = tdPlayer.money;
                     prestige = tdPlayer.prestige;
@@ -52,7 +50,6 @@ public class TDPlayer {
             }
         }
         if (!foundConfig) {
-            System.out.println("NO CONFIG FOUND FOR PLAYER -> CREATING DEFAULT");
             money = 0;
             prestige = 0;
             multiplier = 0;
@@ -117,7 +114,6 @@ public class TDPlayer {
                 Bukkit.getPlayer(UUID.fromString(config.getFile().getName().replace(".yml", ""))),
                 false
         );
-        System.out.println("TDPLAYER DESERIALIZE CALLED");
         player.plot = Plot.deserialize(fConfig.getConfigurationSection("plot"));
         player.money = fConfig.getInt("money", 0);
         player.prestige = fConfig.getInt("prestige", 0);

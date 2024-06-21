@@ -162,13 +162,11 @@ public class Plot {
 
         // map tower's name to its x,y location in the layout's grid
         HashMap<String, LinkedList<String>> towerData = new HashMap<>();
-        System.out.println("SAVING LAYOUT GRID: " + layout.getGrid());
         final GridItem[][] gridItems = layout.getGrid().getInternalArray();
         for (int y = 0; y < gridItems.length; y++) {
             for (int x = 0; x < gridItems[0].length; x++) {
                 GridItem item = gridItems[y][x];
                 if (item instanceof Tower.Item towerItem) {
-                    System.out.println("FOUND TOWER: " + towerItem.getTower().name + " @" + x + ", " + y);
                     String name = towerItem.getTower().name;
                     if (!towerData.containsKey(name)) {
                         towerData.put(name, new LinkedList<>());
