@@ -22,6 +22,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import static me.redplayer_1.towerdefense.Util.MessageUtils.log;
+
 public class LayoutEditor {
     private static final Material PLATFORM_BASE = Material.STONE_BRICKS;
     private static final HashMap<Player, LayoutEditor> openEditors = new HashMap<>();
@@ -79,10 +81,10 @@ public class LayoutEditor {
         setStartLoc(placementArea.fromRelativeLocation(template.getStartLocation(), player.getWorld()));
         for (Direction dir : template.getPath()) {
             try {
-                MessageUtils.log(player, "Add node w/ direction " + dir, LogLevel.SUCCESS);
+                log(player, "Add node w/ direction " + dir, LogLevel.SUCCESS);
                 addNode(dir);
             } catch (NodeOutOfBoundsException e) {
-                MessageUtils.log(player, "Layout \"" + name + "\" has a node with an invalid location. All subsequent nodes have been discarded.", LogLevel.WARN);
+                log(player, "Layout \"" + name + "\" has a node with an invalid location. All subsequent nodes have been discarded.", LogLevel.WARN);
                 break;
             }
         }
@@ -231,7 +233,7 @@ public class LayoutEditor {
             if (editor.path.isEmpty()) {
                 // no nodes placed, set starting node to clicked block
                 if (block == null) {
-                    MessageUtils.log(p, "Click on a block to set the starting position", LogLevel.ERROR);
+                    log(p, "Click on a block to set the starting position", LogLevel.ERROR);
                 } else if (editor.placementArea.contains(block.getLocation())) {
                     Direction dir = switch (event.getPlayer().getFacing()) {
                         case NORTH, NORTH_NORTH_EAST, NORTH_NORTH_WEST, NORTH_WEST, NORTH_EAST -> Direction.NORTH;
@@ -243,10 +245,10 @@ public class LayoutEditor {
                     editor.setStartLoc(block.getLocation().clone());
                     try {
                         editor.addNode(dir);
-                        MessageUtils.log(p, "Set starting location", LogLevel.SUCCESS);
+                        log(p, "Set starting location", LogLevel.SUCCESS);
                     } catch (NodeOutOfBoundsException ignored) { }
                 } else {
-                    MessageUtils.log(p, "Starting location must be within the layout", LogLevel.ERROR);
+                    log(p, "Starting location must be within the layout", LogLevel.ERROR);
                 }
                 return;
             }
@@ -268,7 +270,7 @@ public class LayoutEditor {
             if (dir == null) {
                 if (remove) {
                     if (editor.path.isEmpty()) {
-                        MessageUtils.log(editor.player, "No nodes have been placed.", LogLevel.ERROR);
+                        log(editor.player, "No nodes have been placed.", LogLevel.ERROR);
                     } else {
                         editor.removeLastNode();
                         p.playSound(p, Sound.BLOCK_NOTE_BLOCK_IRON_XYLOPHONE, 1, .5f);

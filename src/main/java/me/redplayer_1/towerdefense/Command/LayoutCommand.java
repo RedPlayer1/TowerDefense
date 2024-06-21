@@ -4,7 +4,6 @@ import me.redplayer_1.towerdefense.Plot.Layout.Layout;
 import me.redplayer_1.towerdefense.Plot.Layout.LayoutEditor;
 import me.redplayer_1.towerdefense.Plot.Layout.Layouts;
 import me.redplayer_1.towerdefense.Util.LogLevel;
-import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -13,21 +12,24 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.List;
 
+import static me.redplayer_1.towerdefense.Util.MessageUtils.helpEntry;
+import static me.redplayer_1.towerdefense.Util.MessageUtils.log;
+
 /**
  * Root command for managing and creating layouts
  */
 public class LayoutCommand extends Command {
     private static final List<String> ARGS = List.of("create", "edit", "save", "delete", "quit", "list", "default", "help");
     private static final String HELP_MSG =
-            MessageUtils.helpEntry("/layout create", null, "open/start editor") + '\n'
-            + MessageUtils.helpEntry("/layout edit", "<name>", "open existing layout") + '\n'
-            + MessageUtils.helpEntry("/layout save", "<name>", "save open editor and create a layout (not needed if editing an existing layout)") + '\n'
-            + MessageUtils.helpEntry("/layout delete", "<name>", "delete a layout") + '\n'
-            + MessageUtils.helpEntry("/layout quit", null, "exit the open editor without saving it") + '\n'
-            + MessageUtils.helpEntry("/layout list",  null, "list all saved layout templates") + '\n'
-            + MessageUtils.helpEntry("/layout default", null, "get the default layout's name") + '\n'
-            + MessageUtils.helpEntry("/layout default", "<layout name>", "set the default layout") + '\n'
-            + MessageUtils.helpEntry("/layout help", null, "show this help page");
+            helpEntry("/layout create", null, "open/start editor") + '\n'
+            + helpEntry("/layout edit", "<name>", "open existing layout") + '\n'
+            + helpEntry("/layout save", "<name>", "save open editor and create a layout (not needed if editing an existing layout)") + '\n'
+            + helpEntry("/layout delete", "<name>", "delete a layout") + '\n'
+            + helpEntry("/layout quit", null, "exit the open editor without saving it") + '\n'
+            + helpEntry("/layout list",  null, "list all saved layout templates") + '\n'
+            + helpEntry("/layout default", null, "get the default layout's name") + '\n'
+            + helpEntry("/layout default", "<layout name>", "set the default layout") + '\n'
+            + helpEntry("/layout help", null, "show this help page");
 
     public LayoutCommand() {
         super("layout");
@@ -40,7 +42,7 @@ public class LayoutCommand extends Command {
             return true;
         }
         if (args.length < 1) {
-            MessageUtils.log(player, "Not enough args", LogLevel.ERROR);
+            log(player, "Not enough args", LogLevel.ERROR);
             return true;
         }
         switch (args[0].toLowerCase()) {
@@ -51,10 +53,10 @@ public class LayoutCommand extends Command {
                     if (layout != null) {
                         new LayoutEditor(player, layout);
                     } else {
-                        MessageUtils.log(player, "Layout \"" + args[1] + "\" does not exist.", LogLevel.ERROR);
+                        log(player, "Layout \"" + args[1] + "\" does not exist.", LogLevel.ERROR);
                     }
                 } else {
-                    MessageUtils.log(player, "Not enough args", LogLevel.ERROR);
+                    log(player, "Not enough args", LogLevel.ERROR);
                 }
             }
             case "save" -> {
@@ -62,25 +64,25 @@ public class LayoutCommand extends Command {
                 if (editor != null) {
                     if (editor.getEditedLayoutName() != null) {
                         editor.save(editor.getEditedLayoutName());
-                        MessageUtils.log(player, "Layout updated.", LogLevel.SUCCESS);
+                        log(player, "Layout updated.", LogLevel.SUCCESS);
                     } else if (args.length >= 2) {
                         editor.save(args[1]);
-                        MessageUtils.log(player, "Layout saved.", LogLevel.SUCCESS);
+                        log(player, "Layout saved.", LogLevel.SUCCESS);
                     } else {
-                        MessageUtils.log(player, "Not enough args", LogLevel.ERROR);
+                        log(player, "Not enough args", LogLevel.ERROR);
                     }
                 } else {
-                    MessageUtils.log(player, "You don't have an open editor", LogLevel.ERROR);
+                    log(player, "You don't have an open editor", LogLevel.ERROR);
                 }
             }
             case "delete" -> {
                 if (args.length < 2) {
-                    MessageUtils.log(player, "Not Enough args", LogLevel.ERROR);
+                    log(player, "Not Enough args", LogLevel.ERROR);
                 } else {
                     if (Layouts.removeTemplate(args[1])) {
-                        MessageUtils.log(player, "Removed layout", LogLevel.SUCCESS);
+                        log(player, "Removed layout", LogLevel.SUCCESS);
                     } else {
-                        MessageUtils.log(player, "No layout named \"" + args[1] + "\" exists", LogLevel.WARN);
+                        log(player, "No layout named \"" + args[1] + "\" exists", LogLevel.WARN);
                     }
                 }
             }
@@ -88,9 +90,9 @@ public class LayoutCommand extends Command {
                 LayoutEditor editor = LayoutEditor.getEditor(player);
                 if (editor != null) {
                     editor.close();
-                    MessageUtils.log(player, "Closed the editor", LogLevel.SUCCESS);
+                    log(player, "Closed the editor", LogLevel.SUCCESS);
                 } else {
-                    MessageUtils.log(player, "No open editor", LogLevel.ERROR);
+                    log(player, "No open editor", LogLevel.ERROR);
                 }
             }
             case "list" -> {
@@ -108,7 +110,7 @@ public class LayoutCommand extends Command {
                 if (args.length > 1) {
                     // default layout name supplied
                     if (Layouts.isTemplate(args[1])) {
-                        MessageUtils.log(player,
+                        log(player,
                                 "The default layout is now <white><i>" + args[1] + "</i></white> (was <white><i>"
                                         + (Layout.defaultLayout != null? Layout.defaultLayout : "none")
                                         + "</i></white>)",
@@ -116,17 +118,17 @@ public class LayoutCommand extends Command {
                         );
                         Layout.defaultLayout = args[1];
                     } else {
-                        MessageUtils.log(player, "No layout named " + args[1] + " exists", LogLevel.ERROR);
+                        log(player, "No layout named " + args[1] + " exists", LogLevel.ERROR);
                     }
                 } else {
                     // send current default layout
                     if (Layout.defaultLayout != null) {
-                        MessageUtils.log(player,
+                        log(player,
                                 "The default layout is <white><i>" + Layout.defaultLayout + "</i></white>",
                                 LogLevel.SUCCESS
                         );
                     } else {
-                        MessageUtils.log(player, "There is no default layout", LogLevel.WARN);
+                        log(player, "There is no default layout", LogLevel.WARN);
                     }
                 }
             }

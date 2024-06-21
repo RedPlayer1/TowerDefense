@@ -7,7 +7,6 @@ import me.redplayer_1.towerdefense.TDPlayer;
 import me.redplayer_1.towerdefense.Util.BlockMesh;
 import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MeshEditor;
-import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -20,20 +19,20 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import static me.redplayer_1.towerdefense.Util.MessageUtils.log;
+import static me.redplayer_1.towerdefense.Util.MessageUtils.*;
 
 public class TowerCommand  extends Command {
     // privileged only command
     private static final List<String> PRIVILEGED_ARGS = List.of("help", "create", "edit", "save", "quit", "list", "give");
     private static final String PRIVILEGED_HELP_MSG =
-            MessageUtils.helpEntry("/tower help", null, "show this help page") + '\n'
-            + MessageUtils.helpEntry("/tower create", "<width (x)> <height (y)> <depth (z)>", "create a new editor with the provided tower dimensions") + '\n'
-            + MessageUtils.helpEntry("/tower edit", "<name>", "edit a tower's mesh") + '\n'
-            + MessageUtils.helpEntry("/tower save", "<name> <range> <damage> <cost>", "creates a new tower with the provided params and with an item set to the held item") + '\n'
-            + MessageUtils.helpEntry("/tower delete", "<name>", "delete a tower") + '\n'
-            + MessageUtils.helpEntry("/tower quit", null, "exit the active editor without saving it") + '\n'
-            + MessageUtils.helpEntry("/tower list", null, "lists all the created towers") + '\n'
-            + MessageUtils.helpEntry("/tower give", "<name>", "gives you the specified tower in item form");
+            helpEntry("/tower help", null, "show this help page") + '\n'
+            + helpEntry("/tower create", "<width (x)> <height (y)> <depth (z)>", "create a new editor with the provided tower dimensions") + '\n'
+            + helpEntry("/tower edit", "<name>", "edit a tower's mesh") + '\n'
+            + helpEntry("/tower save", "<name> <range> <damage> <cost>", "creates a new tower with the provided params and with an item set to the held item") + '\n'
+            + helpEntry("/tower delete", "<name>", "delete a tower") + '\n'
+            + helpEntry("/tower quit", null, "exit the active editor without saving it") + '\n'
+            + helpEntry("/tower list", null, "lists all the created towers") + '\n'
+            + helpEntry("/tower give", "<name>", "gives you the specified tower in item form");
     private final HashMap<Player, TowerFactory> factories = new LinkedHashMap<>();
 
     public TowerCommand() {
@@ -163,7 +162,7 @@ public class TowerCommand  extends Command {
             case "list" -> {
                 player.sendRichMessage("<gray>----- <b><gold>Towers</gold></b> ------</gray>");
                 for (Tower t : Towers.getTowers()) {
-                    player.sendMessage(MessageUtils.asMiniMessage("<yellow>" + t.name + "</yellow>").hoverEvent(MessageUtils.asMiniMessage(
+                    player.sendMessage(asMiniMessage("<yellow>" + t.name + "</yellow>").hoverEvent(asMiniMessage(
                             "<red>Range</red>: <gray>" + t.getRange() + "</gray><newline><red>Damage</red>: <gray>" + t.getDamage() + "</gray><newline><red>Cost</red>: <gray>not implemented</gray><newline><red>Item</red>: "
                     ).append(t.getItem().displayName())));
                 }
