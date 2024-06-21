@@ -1,6 +1,7 @@
 package me.redplayer_1.towerdefense;
 
-import org.bukkit.Bukkit;
+import me.redplayer_1.towerdefense.Util.LogLevel;
+import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -11,8 +12,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 
 public class Config {
-    private YamlConfiguration fileConfig;
-    private File file;
+    private final YamlConfiguration fileConfig;
+    private final File file;
 
     /**
      * Attempts to load the specified file. If it doesn't exist, the file is created.
@@ -60,7 +61,7 @@ public class Config {
             fileConfig.save(file);
             return true;
         } catch (IOException e) {
-            Bukkit.getLogger().severe("Error whilst saving '" + file.getName() + "' to disk!");
+            MessageUtils.logConsole("Error whilst saving '" + file.getName() + "' to disk!", LogLevel.CRITICAL);
             return false;
         }
     }
