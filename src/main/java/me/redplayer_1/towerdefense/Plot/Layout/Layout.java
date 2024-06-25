@@ -1,13 +1,13 @@
 package me.redplayer_1.towerdefense.Plot.Layout;
 
 import me.redplayer_1.towerdefense.Plot.Tower.Tower;
+import me.redplayer_1.towerdefense.TDPlayer;
 import me.redplayer_1.towerdefense.TowerDefense;
 import me.redplayer_1.towerdefense.Util.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.Nullable;
@@ -47,7 +47,8 @@ public class Layout {
         grid = new Grid(SIZE, SIZE);
         this.path = path;
         addPathToGrid();
-        this.towers = new LinkedList<>();
+        towers = new LinkedList<>();
+        enemies = new LinkedList<>();
     }
 
     /**
@@ -69,40 +70,45 @@ public class Layout {
         }
     }
 
-    public void startSpawner() {
+    public void startSpawner(TDPlayer parent) {
         // TODO: handle wave spawning & pass/fail
         spawner = Bukkit.getScheduler().runTaskTimer(TowerDefense.INSTANCE, () -> {
-        }, 0, 10);
+            // FIXME: don't spawn a static number of enemies
+            if (enemies.size() < 5) {
+                parent.getPlayer().sendPlainMessage("Enemy spawned");
+                spawnEnemy();
+            }
+        }, 0, 20);
     }
 
+    /**
+     * Stops the spawning of entities and kills existing ones
+     */
     public void stopSpawner() {
         if (spawner != null) {
             spawner.cancel();
         }
-    }
-
-    public void spawnEnemy() {
-        Entity e = mesh.getBottomLeft().getWorld().spawnEntity(
-                new Location(mesh.getBottomLeft().getWorld(), 0, 0, 0),
-                EntityType.BLOCK_DISPLAY
-        );
-        enemies.add(new Enemy(e, 20, startLoc.add(mesh.getBottomLeft()).toLocation(), path));
+        enemies.forEach(Enemy::kill);
+        enemies.clear();
     }
 
     /**
-     * Moves the layout (blocks, enemies & towers) to a new location
-     * @param bottomLeft the new bottom left location of the layout
+     * @return if the spawner task is running
      */
-    public void move(Location bottomLeft) {
-        // TODO: move towers
-        stopSpawner();
-        while (!enemies.isEmpty()) {
-            // TODO: use wave restart method?
-            enemies.removeFirst().kill();
-        }
-        mesh.destroy();
-        mesh.place(bottomLeft);
-        startSpawner();
+    public boolean isSpawnerEnabled() {
+        return spawner != null && !spawner.isCancelled();
+    }
+
+    /**
+     * Spawn a new enemy on the layout
+     */
+    public void spawnEnemy() {
+        enemies.add(new Enemy(
+                EntityType.ZOMBIE,
+                20, // TODO: make health change w/ waves
+                startLoc.toLocation(mesh.getBottomLeft().getWorld()).add(mesh.getBottomLeft()).add(0, 1, 0),
+                path
+        ));
     }
 
     /**

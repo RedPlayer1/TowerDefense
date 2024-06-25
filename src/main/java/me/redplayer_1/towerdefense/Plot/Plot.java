@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 /**
- * A square area (width & length = Layout.SIZE, y is undefined) consisting of a bottom layer of filler blocks, then
+ * A square area (width, length, and height = Layout.SIZE) consisting of a bottom layer of filler blocks, then
  * the Layout design, then any Placeables (rather, their block representations).
  * Plots are positioned in a grid and have a set of relative x, y coordinates. Operations like relocating the origin
  * of such grid can be quite resource intensive, and, since they use 'for' loops, can momentarily freeze the server.
@@ -86,8 +86,10 @@ public class Plot {
                 layoutName = Layout.defaultLayout;
             }
         }
-        layout = Layouts.getLayout(layoutName, getBottomLeft());
 
+        // clear the plot area and place the layout
+        new BlockMesh(Layout.SIZE, Layout.SIZE, Layout.SIZE).place(getBottomLeft());
+        layout = Layouts.getLayout(layoutName, getBottomLeft());
         Bukkit.broadcast(Component.text("NEW PLOT CREATE w/ Layout " + (this.layout != null? this.layout.getName() : "null") + " @ " + MessageUtils.locationToString(getBottomLeft())));
     }
 
@@ -226,16 +228,6 @@ public class Plot {
 
     public static void setPlotGridOrigin(Location origin) {
         gridOrigin = origin;
-
-        // remove all player towers & plot/layout blocks, then place them according to the new origin
-        for (int y = 0; y < plotGridSize; y++) {
-            for (int x = 0; x < plotGridSize; x++) {
-                Plot plot = plots[y][x];
-                if (plot != null) {
-                    plot.layout.move(plot.getBottomLeft());
-                }
-            }
-        }
     }
 
     /**

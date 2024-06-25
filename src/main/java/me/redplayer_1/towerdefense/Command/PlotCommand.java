@@ -1,13 +1,16 @@
 package me.redplayer_1.towerdefense.Command;
 
+import me.redplayer_1.towerdefense.Plot.Layout.Layout;
 import me.redplayer_1.towerdefense.Plot.Plot;
 import me.redplayer_1.towerdefense.TDPlayer;
 import me.redplayer_1.towerdefense.Util.LogLevel;
+import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
@@ -67,6 +70,15 @@ public class PlotCommand extends Command {
                         TDPlayer tdPlayer = TDPlayer.of(Bukkit.getPlayer(args[1]));
                         if (tdPlayer != null) {
                             player.sendPlainMessage(tdPlayer.getPlot().getLayout().getGrid().toString());
+                            Layout layout = tdPlayer.getPlot().getLayout();
+                            if (layout.isSpawnerEnabled()) {
+                                layout.stopSpawner();
+                                log(player, "Spawner <dark_red>stopped</dark_red>", LogLevel.SUCCESS);
+                            } else {
+                                layout.startSpawner(tdPlayer);
+                                log(player, "Spawner <dark_green>started</dark_green>", LogLevel.SUCCESS);
+                            }
+
                         } else {
                             log(player, "Player \"" + args[1] + "\" does not have a plot", LogLevel.ERROR);
                         }
@@ -99,10 +111,13 @@ public class PlotCommand extends Command {
                                     Integer.parseInt(args[2]),
                                     Integer.parseInt(args[3])
                             );
-                            Plot.setPlotGridOrigin(newOrigin);
                             log(player,
                                     "New plot grid origin is " + locationToString(newOrigin),
                                     LogLevel.SUCCESS);
+                            Bukkit.getOnlinePlayers().forEach(p ->
+                                    p.kick(MessageUtils.asMiniMessage("<gold>Plot origin changed</gold>"), PlayerKickEvent.Cause.PLUGIN)
+                            );
+                            Plot.setPlotGridOrigin(newOrigin);
                         } catch (NumberFormatException e) {
                             log(player, "Origin x, y, and z must be integers", LogLevel.ERROR);
                         }

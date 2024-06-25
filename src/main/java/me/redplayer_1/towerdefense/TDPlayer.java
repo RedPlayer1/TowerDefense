@@ -26,6 +26,7 @@ public class TDPlayer {
     private int money;
     private int prestige;
     private int multiplier;
+    private int wave;
 
     public TDPlayer(Player player, boolean checkForExisting) throws NotEnoughPlotSpaceException, NoLayoutFoundException {
         this.player = player;
@@ -41,6 +42,7 @@ public class TDPlayer {
                     money = tdPlayer.money;
                     prestige = tdPlayer.prestige;
                     multiplier = tdPlayer.multiplier;
+                    wave = tdPlayer.wave;
                 } catch (IOException | InvalidConfigurationException e) {
                     MessageUtils.logConsole(
                             "An error occurred whilst attempting to load player data for \"" + player.getName() + "\": " + e,
@@ -50,9 +52,7 @@ public class TDPlayer {
             }
         }
         if (!foundConfig) {
-            money = 0;
-            prestige = 0;
-            multiplier = 0;
+            // int types (money, prestige, etc) are 0 by default & don't need to be set
             plot = new Plot();
         }
         if (TDPlayer.isPrivileged(player)) {
@@ -76,6 +76,14 @@ public class TDPlayer {
 
     public Plot getPlot() {
         return plot;
+    }
+
+    public int getWave() {
+        return wave;
+    }
+
+    public void setWave(int wave) {
+        this.wave = wave;
     }
 
     /**
@@ -115,9 +123,10 @@ public class TDPlayer {
                 false
         );
         player.plot = Plot.deserialize(fConfig.getConfigurationSection("plot"));
-        player.money = fConfig.getInt("money", 0);
-        player.prestige = fConfig.getInt("prestige", 0);
-        player.multiplier = fConfig.getInt("multiplier", 0);
+        player.money = fConfig.getInt("money");
+        player.prestige = fConfig.getInt("prestige");
+        player.multiplier = fConfig.getInt("multiplier");
+        player.wave = fConfig.getInt("multiplier");
         return player;
     }
 }

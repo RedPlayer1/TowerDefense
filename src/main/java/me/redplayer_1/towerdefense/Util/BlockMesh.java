@@ -26,7 +26,7 @@ public class BlockMesh {
     private @Nullable Location bottomLeft;
 
     /**
-     * Creates a new BlockMesh. Width, height, and depth must be greater than 0
+     * Creates a new BlockMesh filled with {@link Material#AIR}. Width, height, and depth must be greater than 0
      * @param width x-axis
      * @param depth z-axis
      * @param height y-axis
@@ -38,6 +38,7 @@ public class BlockMesh {
         this.height = height;
         mesh = new Material[height][depth][width];
         bottomLeft = null;
+        fillMesh(Material.AIR);
     }
 
     /**
