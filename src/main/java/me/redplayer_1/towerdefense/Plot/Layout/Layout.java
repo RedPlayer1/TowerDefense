@@ -6,8 +6,10 @@ import me.redplayer_1.towerdefense.TowerDefense;
 import me.redplayer_1.towerdefense.Util.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.EntityType;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.Nullable;
@@ -103,8 +105,11 @@ public class Layout {
      * Spawn a new enemy on the layout
      */
     public void spawnEnemy() {
+        Location bL = mesh.getBottomLeft();
+        BlockDisplay display = (BlockDisplay) bL.getWorld().spawnEntity(bL, EntityType.BLOCK_DISPLAY);
+        display.setBlock(Material.SMOOTH_STONE_SLAB.createBlockData());
         enemies.add(new Enemy(
-                EntityType.ZOMBIE,
+                display,
                 20, // TODO: make health change w/ waves
                 startLoc.toLocation(mesh.getBottomLeft().getWorld()).add(mesh.getBottomLeft()).add(0, 1, 0),
                 path

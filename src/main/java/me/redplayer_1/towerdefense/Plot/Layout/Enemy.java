@@ -2,14 +2,10 @@ package me.redplayer_1.towerdefense.Plot.Layout;
 
 import me.redplayer_1.towerdefense.TowerDefense;
 import me.redplayer_1.towerdefense.Util.Direction;
-import me.redplayer_1.towerdefense.Util.MessageUtils;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
@@ -26,16 +22,16 @@ class Enemy {
 
     /**
      * Spawns a new enemy
-     * @param entityType the type of entity that will represent the enemy
+     * @param entity the  entity that will represent the enemy
      * @param health the starting amount of health the enemy should have
      * @param start  the enemy's starting location
      * @param path   the path that the enemy will follow
      */
-    public Enemy(EntityType entityType, int health, Location start, Direction[] path) {
+    public Enemy(Entity entity, int health, Location start, Direction[] path) {
         alive = true;
         this.health = health;
         pathIndex = 0;
-        entity = start.getWorld().spawnEntity(start, entityType, CreatureSpawnEvent.SpawnReason.CUSTOM);
+        entity.teleport(start);
         entity.setGravity(false);
         entity.setInvulnerable(true);
         entity.setGlowing(true);
@@ -45,12 +41,12 @@ class Enemy {
             livingEntity.setAI(false);
             livingEntity.setCanPickupItems(false);
         }
+        this.entity = entity;
         currentBlock = start;
         currentDirection = path[pathIndex];
         Bukkit.getScheduler().runTaskTimer(TowerDefense.INSTANCE, (task) -> {
             // move until the entity is on a different block, then get the next direction
             if (!entity.teleport(currentDirection.toLocation(entity.getLocation(), .1))) {
-                Bukkit.broadcast(Component.text("E: kill because of bad teleport"));
                 deathType = DeathType.PATH;
                 kill();
                 task.cancel();
@@ -63,11 +59,9 @@ class Enemy {
             ) {
                 pathIndex++;
                 currentBlock = loc.clone();
-                Bukkit.broadcast(Component.text("E: currentBlock now " + MessageUtils.locationToString(currentBlock)));
                 try {
                     currentDirection = path[pathIndex];
                 } catch (IndexOutOfBoundsException e) {
-                    Bukkit.broadcast(Component.text("E: kill because end of path was reached"));
                     kill();
                     task.cancel();
                 }

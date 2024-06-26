@@ -112,7 +112,7 @@ public class LayoutEditor {
             throw new NodeOutOfBoundsException();
         }
         BlockDisplay node = (BlockDisplay) startLoc.getWorld().spawnEntity(
-                new Location(startLoc.getWorld(), currentNodeLoc.getBlockX(), currentNodeLoc.y() + 1, currentNodeLoc.getBlockZ()),
+                new Location(startLoc.getWorld(), currentNodeLoc.getBlockX() - .5, currentNodeLoc.y() + 1, currentNodeLoc.getBlockZ() - .5),
                 EntityType.BLOCK_DISPLAY
         );
         final Direction finalDirection = direction;
