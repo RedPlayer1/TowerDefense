@@ -110,6 +110,7 @@ public class Layout {
         display.setBlock(Material.SMOOTH_STONE_SLAB.createBlockData());
         enemies.add(new Enemy(
                 display,
+                .6,
                 20, // TODO: make health change w/ waves
                 startLoc.toLocation(mesh.getBottomLeft().getWorld()).add(mesh.getBottomLeft()).add(0, 1, 0),
                 path

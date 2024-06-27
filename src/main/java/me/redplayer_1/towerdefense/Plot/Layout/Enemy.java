@@ -2,10 +2,15 @@ package me.redplayer_1.towerdefense.Plot.Layout;
 
 import me.redplayer_1.towerdefense.TowerDefense;
 import me.redplayer_1.towerdefense.Util.Direction;
+import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.TextDisplay;
+import org.bukkit.util.Transformation;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
@@ -15,6 +20,7 @@ class Enemy {
     private int health;
     private int pathIndex;
     private final Entity entity;
+    private final TextDisplay healthDisplay;
     private Location currentBlock;
     private Direction currentDirection;
     private @Nullable DeathType deathType;
@@ -23,14 +29,19 @@ class Enemy {
     /**
      * Spawns a new enemy
      * @param entity the  entity that will represent the enemy
+     * @param entityHeight the height of the entity in blocks
      * @param health the starting amount of health the enemy should have
      * @param start  the enemy's starting location
      * @param path   the path that the enemy will follow
      */
-    public Enemy(Entity entity, int health, Location start, Direction[] path) {
+    public Enemy(Entity entity, double entityHeight, int health, Location start, Direction[] path) {
         alive = true;
         this.health = health;
         pathIndex = 0;
+        currentBlock = start;
+        currentDirection = path[pathIndex];
+
+        // ensure entity is set up correctly
         entity.teleport(start);
         entity.setGravity(false);
         entity.setInvulnerable(true);
@@ -42,16 +53,28 @@ class Enemy {
             livingEntity.setCanPickupItems(false);
         }
         this.entity = entity;
-        currentBlock = start;
-        currentDirection = path[pathIndex];
+
+        // initialize health display
+        healthDisplay = (TextDisplay) start.getWorld().spawnEntity(start, EntityType.TEXT_DISPLAY);
+        healthDisplay.setSeeThrough(false);
+        healthDisplay.setBackgroundColor(Color.BLACK);
+        Transformation t = healthDisplay.getTransformation();
+        t.getTranslation().set(.5, 0, .5);
+        t.getRightRotation().setAngleAxis(1.5, -1, 0, 0);
+        healthDisplay.setTransformation(t);
+        updateHealthDisplay();
+
+        // start movement along path
         Bukkit.getScheduler().runTaskTimer(TowerDefense.INSTANCE, (task) -> {
             // move until the entity is on a different block, then get the next direction
-            if (!entity.teleport(currentDirection.toLocation(entity.getLocation(), .1))) {
+            Location destination = currentDirection.toLocation(entity.getLocation(), .1);
+            if (!entity.teleport(destination)) {
                 deathType = DeathType.PATH;
                 kill();
                 task.cancel();
                 return;
             }
+            healthDisplay.teleport(destination.add(0, entityHeight, 0));
             Location loc = entity.getLocation();
             if (
                     loc.getBlockX() != currentBlock.getBlockX()
@@ -69,15 +92,23 @@ class Enemy {
         }, 0, 1 /* when a mob is teleported every tick, it plays the walking animation */);
     }
 
+    private void updateHealthDisplay() {
+        healthDisplay.text(MessageUtils.asMiniMessage("<red>" + health + "</red><dark_red>❤</dark_red>"));
+    }
+
     /**
      * Damages the enemy. If health goes below zero, the enemy will be {@link #kill() killed}.
      * @param amount the amount of health to take away
      */
     public void damage(int amount) {
-        health -= amount;
-        if (health <= 0) {
-            health = 0;
-            kill();
+        if (alive) {
+            health -= amount;
+            if (health <= 0) {
+                health = 0;
+                kill();
+            } else {
+                updateHealthDisplay();
+            }
         }
     }
 
@@ -88,6 +119,7 @@ class Enemy {
     public void heal(int amount) {
         if (alive) {
             health += amount;
+            updateHealthDisplay();
         }
     }
 
@@ -99,6 +131,7 @@ class Enemy {
         deathType = DeathType.HEALTH;
         alive = false;
         entity.remove();
+        healthDisplay.remove();
         if (deathEventHandler != null) {
             deathEventHandler.accept(this);
         }
