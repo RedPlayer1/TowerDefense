@@ -72,10 +72,10 @@ public class PlotCommand extends Command {
                             player.sendPlainMessage(tdPlayer.getPlot().getLayout().getGrid().toString());
                             Layout layout = tdPlayer.getPlot().getLayout();
                             if (layout.isSpawnerEnabled()) {
-                                layout.stopSpawner();
+                                layout.stop();
                                 log(player, "Spawner <dark_red>stopped</dark_red>", LogLevel.SUCCESS);
                             } else {
-                                layout.startSpawner(tdPlayer);
+                                layout.start(tdPlayer);
                                 log(player, "Spawner <dark_green>started</dark_green>", LogLevel.SUCCESS);
                             }
 

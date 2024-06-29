@@ -20,12 +20,10 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class Tower {
     private static final NamespacedKey ID_KEY = new NamespacedKey(TowerDefense.INSTANCE, "tower_id");
     public final String name;
-    private @Nullable Location location;
     private ItemStack item;
     private int range; /* Range.Unlimited -1, Range.None 0*/
     private int damage;
@@ -37,7 +35,6 @@ public class Tower {
         this.range = range;
         this.damage = damage;
         this.mesh = mesh;
-        location = null;
     }
     /*
     Use offensive/defensive(or support) tower subclasses?
@@ -59,13 +56,6 @@ public class Tower {
         return item;
     }
 
-    /**
-     * @return the location that this tower is
-     */
-    public @Nullable Location getLocation() {
-        return location;
-    }
-
     public void setRange(int range) {
         this.range = range;
     }
@@ -78,9 +68,6 @@ public class Tower {
         this.damage = damage;
     }
 
-    public void setLocation(@Nullable Location location) {
-        this.location = location;
-    }
 
     public int getDamage() {
         return damage;

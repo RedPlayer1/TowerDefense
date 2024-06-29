@@ -72,7 +72,7 @@ public class Layout {
         }
     }
 
-    public void startSpawner(TDPlayer parent) {
+    public void start(TDPlayer parent) {
         // TODO: handle wave spawning & pass/fail
         spawner = Bukkit.getScheduler().runTaskTimer(TowerDefense.INSTANCE, () -> {
             // FIXME: don't spawn a static number of enemies
@@ -86,7 +86,7 @@ public class Layout {
     /**
      * Stops the spawning of entities and kills existing ones
      */
-    public void stopSpawner() {
+    public void stop() {
         if (spawner != null) {
             spawner.cancel();
         }
@@ -122,7 +122,7 @@ public class Layout {
      * Any operations preformed on the object afterward are will have undefined behavior
      */
     public void remove() {
-        stopSpawner();
+        stop();
         mesh.destroy();
         for (Tower tower : towers) {
             tower.getMesh().destroy();
@@ -143,7 +143,6 @@ public class Layout {
             towers.add(tower);
             grid.add(towerItem, relLoc.x, relLoc.z);
             towerMesh.place(location);
-            tower.setLocation(location);
             return true;
         }
         return false;
