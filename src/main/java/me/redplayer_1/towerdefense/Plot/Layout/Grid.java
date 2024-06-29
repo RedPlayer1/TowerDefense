@@ -12,9 +12,16 @@ import java.util.function.Function;
  */
 public class Grid {
     private final GridItem[][] items; // [y][x]
+    public final int height;
+    public final int width;
 
     public Grid(int width, int height) {
+        if (width < 1 || height < 1) {
+            throw new IllegalArgumentException("Width and height must be greater than zero");
+        }
         items = new GridItem[height][width];
+        this.width = width;
+        this.height = height;
     }
 
     /**
@@ -79,8 +86,8 @@ public class Grid {
      * @param item the item to remove
      */
     public void remove(GridItem item) {
-        for (int y = 0; y < items.length; y++) {
-            for (int x = 0; x < items[0].length; x++) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
                 if (items[y][x] == item) {
                     remove(x, y);
                     return;
@@ -131,9 +138,10 @@ public class Grid {
     }
 
     /**
-     * Loops over all the grid cells that the item covers and sets its value to that returned by {@code iter}
+     * Loops over all the grid cells that the item covers and sets its value to that returned by {@code iter}.
+     * Fails silently if there isn't an item at the provided coordinates.
      */
-    private void forItemArea(int x, int y, Function<@Nullable GridItem, @Nullable GridItem> iter) {
+    public void forItemArea(int x, int y, Function<@Nullable GridItem, @Nullable GridItem> iter) {
         GridItem item = get(x, y);
         if (item == null) return;
         forItemArea(x, y, item.width, item.height, iter);
@@ -148,16 +156,16 @@ public class Grid {
      * @param height the height of the area
      * @param iter the function to run for each item
      */
-    private void forItemArea(int x, int y, int width, int height, Function<@Nullable GridItem, @Nullable GridItem> iter) {
-        for (int i = 0; i < height && i + y < items.length; i++) {
-            for (int j = 0; j < width && j + x < items[0].length; j++) {
+    public void forItemArea(int x, int y, int width, int height, Function<@Nullable GridItem, @Nullable GridItem> iter) {
+        for (int i = 0; i < height && i + y < this.height; i++) {
+            for (int j = 0; j < width && j + x < this.width; j++) {
                 items[y + i][x + j] = iter.apply(items[y + i][x + j]);
             }
         }
     }
 
     private boolean isWithinBounds(int x, int y, int width, int height) {
-        return x >= 0 && y >= 0 && x + width <= items[0].length && y + height <= items.length;
+        return x >= 0 && y >= 0 && x + width <= this.width && y + height <= this.height;
     }
 
     /**
@@ -166,10 +174,10 @@ public class Grid {
      */
     @Override
     public String toString() {
-        StringBuilder str = new StringBuilder("Grid (" + items[0].length + ", " + items.length + ")\n");
-        for (int y = items.length-1; y >= 0; y--) {
+        StringBuilder str = new StringBuilder("Grid (" + width + ", " + height + ")\n");
+        for (int y = height-1; y >= 0; y--) {
             str.append("y").append(y);
-            for (int x = 0; x < items[0].length; x++) {
+            for (int x = 0; x < width; x++) {
                 str.append(' ');
                 GridItem item = items[y][x];
                 if (item == null) {
