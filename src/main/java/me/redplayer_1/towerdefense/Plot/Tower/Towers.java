@@ -1,9 +1,10 @@
 package me.redplayer_1.towerdefense.Plot.Tower;
 
 import me.redplayer_1.towerdefense.Exception.NoSuchTemplateException;
-import me.redplayer_1.towerdefense.Util.BlockMesh;
+import me.redplayer_1.towerdefense.Geometry.BlockMesh;
+import me.redplayer_1.towerdefense.Geometry.MeshEditor;
+import me.redplayer_1.towerdefense.Geometry.Vector3;
 import me.redplayer_1.towerdefense.Util.LogLevel;
-import me.redplayer_1.towerdefense.Util.MeshEditor;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -46,7 +47,10 @@ public final class Towers {
             }
         }
         if (template == null) return null;
-        return new Tower(name, template.getItem(), template.getRange(), template.getDamage(), new BlockMesh(template.getMesh()));
+        return new Tower(
+                name, template.getItem(), new BlockMesh(template.getMesh()), template.getParticlePoint(),
+                template.getRange(), template.getDamage(), template.getTargets(), template.getAttackDelay()
+        );
     }
 
     /**
@@ -73,7 +77,7 @@ public final class Towers {
     }
 
     /**
-     * Creates a new {@link me.redplayer_1.towerdefense.Util.MeshEditor MeshEditor} for a tower template
+     * Creates a new {@link MeshEditor MeshEditor} for a tower template
      * @param player the player editing the tower
      * @param towerName the name of the tower to edit
      * @return the created editor
@@ -98,6 +102,9 @@ public final class Towers {
             towerSec.set("item", tower.getItem());
             towerSec.set("range", tower.getRange());
             towerSec.set("damage", tower.getDamage());
+            towerSec.set("targets", tower.getTargets());
+            towerSec.set("attackDelay", tower.getAttackDelay());
+            tower.getParticlePoint().serialize(towerSec.createSection("particlePoint"));
             tower.getMesh().serialize(towerSec, "mesh");
         }
     }
@@ -108,13 +115,18 @@ public final class Towers {
      */
     public static void deserialize(ConfigurationSection section) {
         for (String towerName : section.getKeys(false)) {
+            if (!section.isConfigurationSection(towerName)) continue;
             try {
+                ConfigurationSection towerSec = Objects.requireNonNull(section.getConfigurationSection(towerName));
                 add(new Tower(
                         towerName,
-                        Objects.requireNonNull(section.getItemStack(towerName + ".item")),
-                        section.getInt(towerName + ".range"),
-                        section.getInt(towerName + ".damage"),
-                        BlockMesh.deserialize(section.getConfigurationSection(towerName + ".mesh"))
+                        Objects.requireNonNull(towerSec.getItemStack("item")),
+                        BlockMesh.deserialize(towerSec.getConfigurationSection("mesh")),
+                        Vector3.deserialize(Objects.requireNonNull(towerSec.getConfigurationSection("particlePoint"))),
+                        towerSec.getInt("range"),
+                        towerSec.getInt("damage"),
+                        towerSec.getInt("targets"),
+                        towerSec.getInt("attackDelay")
                 ));
             } catch (InvalidConfigurationException | NullPointerException e) {
                 MessageUtils.logConsole("Invalid configuration for Tower \"" + towerName + "\"", LogLevel.WARN);

@@ -159,13 +159,18 @@ public class Grid {
     public void forItemArea(int x, int y, int width, int height, Function<@Nullable GridItem, @Nullable GridItem> iter) {
         for (int i = 0; i < height && i + y < this.height; i++) {
             for (int j = 0; j < width && j + x < this.width; j++) {
-                items[y + i][x + j] = iter.apply(items[y + i][x + j]);
+                int itemX = x + j;
+                int itemY = y + i;
+                // handle edge case where starting x and/or y are out of bounds
+                if (isWithinBounds(itemX, itemY, 1, 1)) {
+                    items[y + i][x + j] = iter.apply(items[y + i][x + j]);
+                }
             }
         }
     }
 
     private boolean isWithinBounds(int x, int y, int width, int height) {
-        return x >= 0 && y >= 0 && x + width <= this.width && y + height <= this.height;
+        return x >= 0 && y >= 0 && x + width-1 <= this.width && y + height-1 <= this.height;
     }
 
     /**

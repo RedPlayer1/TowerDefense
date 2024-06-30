@@ -1,5 +1,6 @@
-package me.redplayer_1.towerdefense.Util;
+package me.redplayer_1.towerdefense.Geometry;
 
+import me.redplayer_1.towerdefense.Util.LocationUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -15,15 +16,8 @@ import java.util.function.BiConsumer;
 /**
  * A rectangular area of blocks
  */
-public class BlockMesh {
-    /** x length */
-    public final int width;
-    /** z length */
-    public final int depth;
-    /** y length */
-    public final int height;
+public class BlockMesh extends Area {
     private final Material[][][] mesh; // [y][z][x]
-    private @Nullable Location bottomLeft;
 
     /**
      * Creates a new BlockMesh filled with {@link Material#AIR}. Width, height, and depth must be greater than 0
@@ -32,12 +26,8 @@ public class BlockMesh {
      * @param height y-axis
      */
     public BlockMesh(int width, int depth, int height) {
-        assert width > 0 && depth > 0 && height > 0;
-        this.width = width;
-        this.depth = depth;
-        this.height = height;
+        super(width, depth, height);
         mesh = new Material[height][depth][width];
-        bottomLeft = null;
         fillMesh(Material.AIR);
     }
 
@@ -46,11 +36,8 @@ public class BlockMesh {
      * @param original the mesh to copy from
      */
     public BlockMesh(BlockMesh original) {
-        width = original.width;
-        depth = original.depth;
-        height = original.height;
+        super(original.width, original.depth, original.height, original.getBottomLeft());
         mesh = original.mesh;
-        bottomLeft = original.bottomLeft;
     }
 
     /**
@@ -73,7 +60,7 @@ public class BlockMesh {
      * @param bottomLeft the location of the bottom left corner of the placement
      */
     public void place(Location bottomLeft) {
-        this.bottomLeft = bottomLeft;
+        setBottomLeft(bottomLeft);
         forEachBlock(bottomLeft, (loc, rel) ->
                 loc.getWorld().setType(loc, mesh[rel.y][rel.z][rel.x])
         );
@@ -89,22 +76,16 @@ public class BlockMesh {
     }
 
     /**
-     * @return a copy of the bottom left corner of the block mesh (if it exists)
-     */
-    public Location getBottomLeft() {
-        return bottomLeft != null? bottomLeft.clone() : null;
-    }
-
-    /**
      * Sets the bottom left coordinate of the mesh. Changing this will alter where the {@link BlockMesh#destroy()}
      * method occurs (a null value means that the mesh is not placed).
      * @param bottomLeft the bottom left location of the mesh
      */
+    @Override
     public void setBottomLeft(@Nullable Location bottomLeft) {
         if (bottomLeft != null) {
-            bottomLeft.set(bottomLeft.getBlockX(), bottomLeft.getBlockY(), bottomLeft.getBlockZ());
+            bottomLeft = bottomLeft.toBlockLocation();
         }
-        this.bottomLeft = bottomLeft;
+        super.setBottomLeft(bottomLeft);
     }
 
     /**
@@ -173,10 +154,11 @@ public class BlockMesh {
     }
 
     /**
-     * @return the location's location relative to the mesh's bottom-left coordinate or null if mesh isn't placed
+     * @return the location's location relative to the mesh's bottom-left coordinate.
+     * @throws IllegalStateException if this mesh isn't placed
      */
     public Vector3 toRelativeLocation(Location location) {
-        if (bottomLeft == null) return null;
+        if (bottomLeft == null) throw new IllegalStateException("The mesh's bottom left must not be null");
         return new Vector3(location.getBlockX() - bottomLeft.getBlockX(),
                 location.getBlockY() - bottomLeft.getBlockY(),
                 bottomLeft.getBlockZ() - location.getBlockZ());
@@ -187,9 +169,12 @@ public class BlockMesh {
      * @param rel the relative position
      * @param world the location's world
      * @return the new location
+     * @throws IllegalStateException if the mesh is not placed
      */
-    public @Nullable Location fromRelativeLocation(Vector3 rel, @Nullable World world) {
-        if (bottomLeft == null) return null;
+    public Location fromRelativeLocation(Vector3 rel, @Nullable World world) {
+        if (bottomLeft == null) {
+            throw new IllegalStateException("Mesh must be placed before a relative location can be converted");
+        }
         return new Location(
                 world,
                 bottomLeft.getBlockX() + rel.x,

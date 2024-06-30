@@ -1,9 +1,13 @@
 package me.redplayer_1.towerdefense.Plot.Layout;
 
+import me.redplayer_1.towerdefense.Geometry.BlockMesh;
+import me.redplayer_1.towerdefense.Geometry.Direction;
+import me.redplayer_1.towerdefense.Geometry.Vector3;
 import me.redplayer_1.towerdefense.Plot.Tower.Tower;
 import me.redplayer_1.towerdefense.TDPlayer;
 import me.redplayer_1.towerdefense.TowerDefense;
-import me.redplayer_1.towerdefense.Util.*;
+import me.redplayer_1.towerdefense.Util.LogLevel;
+import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -29,6 +33,7 @@ public class Layout {
     private LinkedList<Enemy> enemies;
     private LinkedList<Tower> towers;
     private BukkitTask spawner = null;
+    private BukkitTask attacker = null;
     private float enemyTickRate;
 
     /**
@@ -60,10 +65,9 @@ public class Layout {
         int x, y;
         x = startLoc.x;
         y = startLoc.z;
-        final GridItem pathItem = new GridItem();
-        for (Direction dir : path) {
-            grid.add(pathItem, x, y);
-            switch (dir) {
+        for (int i = 0; i < path.length; i++) {
+            grid.add(new PathItem(i), x, y);
+            switch (path[i]) {
                 case NORTH -> y++;
                 case SOUTH -> y--;
                 case EAST -> x++;
@@ -81,6 +85,15 @@ public class Layout {
                 spawnEnemy();
             }
         }, 0, 20);
+
+        attacker = Bukkit.getScheduler().runTaskTimer(TowerDefense.INSTANCE, () -> {
+            for (Tower tower : towers) {
+                if (tower.canAttack()) {
+                    tower.attack(enemies, parent.getPlayer(), .1);
+                }
+                tower.tick();
+            }
+        }, 0, 1);
     }
 
     /**
@@ -89,6 +102,9 @@ public class Layout {
     public void stop() {
         if (spawner != null) {
             spawner.cancel();
+        }
+        if (attacker != null) {
+            attacker.cancel();
         }
         enemies.forEach(Enemy::kill);
         enemies.clear();
@@ -142,6 +158,7 @@ public class Layout {
         if (towerMesh.canPlace(location) && grid.canAdd(towerItem, relLoc.x, relLoc.z)) {
             towers.add(tower);
             grid.add(towerItem, relLoc.x, relLoc.z);
+            tower.computeAccessiblePathIndices(relLoc.x, relLoc.z, grid);
             towerMesh.place(location);
             return true;
         }
@@ -156,6 +173,7 @@ public class Layout {
      * @return if the tower was placed
      */
     public boolean placeTower(Tower tower, int gridX, int gridY) {
+        assert mesh.getBottomLeft() != null;
         return placeTower(tower, mesh.fromRelativeLocation(new Vector3(gridX, 1, gridY), mesh.getBottomLeft().getWorld()));
     }
 
@@ -181,6 +199,7 @@ public class Layout {
             BlockMesh towerMesh = item.getTower().getMesh();
             towerMesh.setBottomLeft(mesh.fromRelativeLocation(new Vector3(item.gridX, 1, item.gridY), location.getWorld()));
             towerMesh.destroy();
+            towers.remove(item.getTower());
             return item.getTower();
         }
         return null;
@@ -267,5 +286,11 @@ public class Layout {
         }
     }
 
+    public static class PathItem extends GridItem {
+        public final int index;
 
+        public PathItem(int index) {
+            this.index = index;
+        }
+    }
 }

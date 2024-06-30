@@ -1,21 +1,24 @@
 package me.redplayer_1.towerdefense.Plot.Layout;
 
+import me.redplayer_1.towerdefense.Geometry.Direction;
 import me.redplayer_1.towerdefense.TowerDefense;
-import me.redplayer_1.towerdefense.Util.Direction;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.TextDisplay;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Transformation;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 
-class Enemy {
+public class Enemy {
+    private static final NamespacedKey KEY = new NamespacedKey(TowerDefense.INSTANCE, "enemy");
     private boolean alive;
     private int health;
     private int pathIndex;
@@ -47,7 +50,7 @@ class Enemy {
         entity.setInvulnerable(true);
         entity.setGlowing(true);
         entity.setVisibleByDefault(true);
-        entity.setVisualFire(false);
+        entity.getPersistentDataContainer().set(KEY, PersistentDataType.BOOLEAN, true);
         if (entity instanceof LivingEntity livingEntity) {
             livingEntity.setAI(false);
             livingEntity.setCanPickupItems(false);
@@ -94,6 +97,17 @@ class Enemy {
 
     private void updateHealthDisplay() {
         healthDisplay.text(MessageUtils.asMiniMessage("<red>" + health + "</red><dark_red>❤</dark_red>"));
+    }
+
+    /**
+     * @return the entity that represents this enemy
+     */
+    public Entity getEntity() {
+        return entity;
+    }
+
+    public int getPathIndex() {
+        return pathIndex;
     }
 
     /**
@@ -160,6 +174,7 @@ class Enemy {
     public @Nullable DeathType getDeathType() {
         return deathType;
     }
+
 
     public enum DeathType {
         /**

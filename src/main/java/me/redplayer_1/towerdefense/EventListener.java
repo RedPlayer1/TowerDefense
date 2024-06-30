@@ -2,9 +2,9 @@ package me.redplayer_1.towerdefense;
 
 import me.redplayer_1.towerdefense.Exception.NoLayoutFoundException;
 import me.redplayer_1.towerdefense.Exception.NotEnoughPlotSpaceException;
+import me.redplayer_1.towerdefense.Geometry.MeshEditor;
 import me.redplayer_1.towerdefense.Plot.Layout.LayoutEditor;
 import me.redplayer_1.towerdefense.Util.LogLevel;
-import me.redplayer_1.towerdefense.Util.MeshEditor;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;

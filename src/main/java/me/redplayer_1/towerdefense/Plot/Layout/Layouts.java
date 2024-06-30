@@ -1,7 +1,7 @@
 package me.redplayer_1.towerdefense.Plot.Layout;
 
+import me.redplayer_1.towerdefense.Geometry.BlockMesh;
 import me.redplayer_1.towerdefense.Plot.Plot;
-import me.redplayer_1.towerdefense.Util.BlockMesh;
 import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Location;

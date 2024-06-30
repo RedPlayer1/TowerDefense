@@ -2,7 +2,8 @@ package me.redplayer_1.towerdefense;
 
 import me.redplayer_1.towerdefense.Command.LayoutCommand;
 import me.redplayer_1.towerdefense.Command.PlotCommand;
-import me.redplayer_1.towerdefense.Command.TowerCommand;
+import me.redplayer_1.towerdefense.Command.Tower.TowerCommand;
+import me.redplayer_1.towerdefense.Geometry.MeshEditor;
 import me.redplayer_1.towerdefense.Plot.Layout.Layout;
 import me.redplayer_1.towerdefense.Plot.Layout.LayoutEditor;
 import me.redplayer_1.towerdefense.Plot.Layout.Layouts;
@@ -10,7 +11,6 @@ import me.redplayer_1.towerdefense.Plot.Plot;
 import me.redplayer_1.towerdefense.Plot.Tower.Tower;
 import me.redplayer_1.towerdefense.Plot.Tower.Towers;
 import me.redplayer_1.towerdefense.Util.LogLevel;
-import me.redplayer_1.towerdefense.Util.MeshEditor;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandMap;

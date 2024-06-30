@@ -2,12 +2,12 @@ package me.redplayer_1.towerdefense.Plot;
 
 import me.redplayer_1.towerdefense.Exception.NoLayoutFoundException;
 import me.redplayer_1.towerdefense.Exception.NotEnoughPlotSpaceException;
+import me.redplayer_1.towerdefense.Geometry.BlockMesh;
 import me.redplayer_1.towerdefense.Plot.Layout.GridItem;
 import me.redplayer_1.towerdefense.Plot.Layout.Layout;
 import me.redplayer_1.towerdefense.Plot.Layout.Layouts;
 import me.redplayer_1.towerdefense.Plot.Tower.Tower;
 import me.redplayer_1.towerdefense.Plot.Tower.Towers;
-import me.redplayer_1.towerdefense.Util.BlockMesh;
 import me.redplayer_1.towerdefense.Util.LocationUtils;
 import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MessageUtils;

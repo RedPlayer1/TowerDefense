@@ -1,12 +1,11 @@
-package me.redplayer_1.towerdefense.Command;
+package me.redplayer_1.towerdefense.Command.Tower;
 
+import me.redplayer_1.towerdefense.Geometry.BlockMesh;
+import me.redplayer_1.towerdefense.Geometry.MeshEditor;
 import me.redplayer_1.towerdefense.Plot.Tower.Tower;
-import me.redplayer_1.towerdefense.Plot.Tower.TowerFactory;
 import me.redplayer_1.towerdefense.Plot.Tower.Towers;
 import me.redplayer_1.towerdefense.TDPlayer;
-import me.redplayer_1.towerdefense.Util.BlockMesh;
 import me.redplayer_1.towerdefense.Util.LogLevel;
-import me.redplayer_1.towerdefense.Util.MeshEditor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -16,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import static me.redplayer_1.towerdefense.Util.MessageUtils.*;
@@ -28,12 +26,12 @@ public class TowerCommand  extends Command {
             helpEntry("/tower help", null, "show this help page") + '\n'
             + helpEntry("/tower create", "<width (x)> <height (y)> <depth (z)>", "create a new editor with the provided tower dimensions") + '\n'
             + helpEntry("/tower edit", "<name>", "edit a tower's mesh") + '\n'
-            + helpEntry("/tower save", "<name> <range> <damage> <cost>", "creates a new tower with the provided params and with an item set to the held item") + '\n'
+            + helpEntry("/tower save", "<name>", "creates a new tower with the provided params and with an item set to the held item") + '\n'
             + helpEntry("/tower delete", "<name>", "delete a tower") + '\n'
             + helpEntry("/tower quit", null, "exit the active editor without saving it") + '\n'
             + helpEntry("/tower list", null, "lists all the created towers") + '\n'
             + helpEntry("/tower give", "<name>", "gives you the specified tower in item form");
-    private final HashMap<Player, TowerFactory> factories = new LinkedHashMap<>();
+    private final HashMap<Player, MeshEditor> editors = new HashMap<>();
 
     public TowerCommand() {
         super("tower");
@@ -55,7 +53,7 @@ public class TowerCommand  extends Command {
         switch (args[0]) {
             case "help" -> player.sendRichMessage(PRIVILEGED_HELP_MSG);
             case "create" -> {
-                if (factories.containsKey(player)) {
+                if (editors.containsKey(player)) {
                     log(player, "You are already editing a tower", LogLevel.ERROR);
                 } else if (args.length < 4) {
                     log(player, "Not enough args", LogLevel.ERROR);
@@ -67,9 +65,9 @@ public class TowerCommand  extends Command {
                         BlockMesh mesh = new BlockMesh(x, z, y);
                         mesh.setBottomLeft(player.getLocation());
                         mesh.fillMesh(Material.AIR);
-                        factories.put(player, new TowerFactory().setEditor(new MeshEditor(
+                        editors.put(player, new MeshEditor(
                                 player, mesh, Material.BEDROCK //TODO: make config value
-                        )));
+                        ));
                         log(player, "Now editing a new tower", LogLevel.SUCCESS);
                     } catch (NumberFormatException e) {
                         log(player, "width, height and depth arguments must be integers", LogLevel.ERROR);
@@ -77,61 +75,30 @@ public class TowerCommand  extends Command {
                 }
             }
             case "edit" -> {
-                if (factories.containsKey(player)) {
+                if (editors.containsKey(player)) {
                     log(player, "You are already editing a tower", LogLevel.ERROR);
                 } else if (args.length < 2) {
                     log(player, "Not enough args", LogLevel.ERROR);
                 } else {
-                    Tower t = Towers.get(args[1]);
-                    if (t != null) {
-                        factories.put(player, new TowerFactory(t).setMesh(null).setEditor(
-                                new MeshEditor(player, new BlockMesh(t.getMesh()), Material.BEDROCK)
-                        ));
-                        log(player, "Now editing tower \"" + t.name + "\"", LogLevel.SUCCESS);
+                    Tower tower = Towers.get(args[1]);
+                    if (tower != null) {
+                        editors.put(player, new MeshEditor(player, new BlockMesh(tower.getMesh()), Material.BEDROCK));
+                        log(player, "Now editing tower \"" + tower.name + "\"", LogLevel.SUCCESS);
                     } else {
                         log(player, "No tower with that name exists", LogLevel.ERROR);
                     }
                 }
             }
             case "save" -> {
-                TowerFactory factory = factories.get(player);
-                if (factory == null) {
+                MeshEditor editor = editors.get(player);
+                ItemStack item = player.getInventory().getItemInMainHand();
+                if (editor == null) {
                     log(player, "You must be editing a tower to do this", LogLevel.ERROR);
-                } else if (args.length < 5) {
-                    if (args.length == 1) {
-                        // no args supplied, check if the factory was based on a preexisting tower
-                        try {
-                            Towers.add(factory.build());
-                            factories.remove(player);
-                            log(player, "Updated existing tower", LogLevel.SUCCESS);
-                        } catch (IllegalStateException e) {
-                            log(player, "Not enough args", LogLevel.ERROR);
-                        }
-                    } else {
-                        log(player, "Not enough args", LogLevel.ERROR);
-                    }
+                } else if (item.isEmpty() || !item.getType().isBlock()) {
+                    log(player, "You must be holding a placeable item", LogLevel.ERROR);
                 } else {
-                    try {
-                        ItemStack item = player.getInventory().getItemInMainHand();
-                        if (!item.getType().isBlock() || item.getType() == Material.AIR) {
-                            log(player, "A tower item must be a placeable block", LogLevel.ERROR);
-                            return true;
-                        }
-                        factory.setItem(item);
-                        factory.setName(args[1]);
-                        factory.setRange(Integer.parseInt(args[2]));
-                        factory.setDamage(Integer.parseInt(args[3]));
-                        // TODO: cost
-                        try {
-                            Towers.add(factory.build());
-                            factories.remove(player);
-                            log(player, "Tower created", LogLevel.SUCCESS);
-                        } catch (IllegalStateException e) {
-                            log(player, "Something went wrong while creating the tower, please report", LogLevel.CRITICAL);
-                        }
-                    } catch (NumberFormatException e) {
-                        log(player, "The range and damage arguments must be valid integers", LogLevel.ERROR);
-                    }
+                    new TowerConversation(player, editor.close(true), item);
+                    editors.remove(player);
                 }
             }
             case "delete" -> {
@@ -148,12 +115,10 @@ public class TowerCommand  extends Command {
                 }
             }
             case "quit" -> {
-                TowerFactory factory = factories.get(player);
-                if (factory != null) {
-                    if (factory.getEditor() != null) {
-                        factory.getEditor().close(false);
-                    }
-                    factories.remove(player);
+                MeshEditor editor = editors.get(player);
+                if (editor != null) {
+                    editor.close(false);
+                    editors.remove(player);
                     log(player, "Quit the active editor", LogLevel.SUCCESS);
                 } else {
                     log(player, "You are not editing a tower", LogLevel.ERROR);

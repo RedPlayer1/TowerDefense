@@ -1,4 +1,4 @@
-package me.redplayer_1.towerdefense.Util;
+package me.redplayer_1.towerdefense.Geometry;
 
 import org.bukkit.Location;
 import org.bukkit.World;
