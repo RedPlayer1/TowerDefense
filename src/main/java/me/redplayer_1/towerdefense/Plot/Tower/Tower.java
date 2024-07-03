@@ -50,9 +50,11 @@ public class Tower {
      * @param name the name of the tower
      * @param item the placeable item that represents the tower
      * @param mesh the tower's blocks
+     * @param particle the particle displayed when the tower attacks
      * @param particlePoint the relative location within the mesh where attack particles will originate
      * @param range the tower's range (range is a cube, not spherical)
      * @param damage the base damage the tower deals
+     * @param cost the cost to purchase the tower
      * @param targets the maximum number of enemies that the tower should damage every time it attacks
      * @param attackDelay number of ticks before the tower can attack enemies
      */

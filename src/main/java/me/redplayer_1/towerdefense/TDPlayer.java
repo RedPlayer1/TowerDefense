@@ -107,7 +107,7 @@ public class TDPlayer {
             fConfig.set("multiplier", multiplier);
             plot.serialize(fConfig.createSection("plot"));
             config.save();
-        } catch (IOException | InvalidConfigurationException e) {
+        } catch (IOException e) {
             MessageUtils.log(
                     Bukkit.getConsoleSender(),
                     "Error whilst saving TDPlayer of \"" + player.getName() + "\"",
