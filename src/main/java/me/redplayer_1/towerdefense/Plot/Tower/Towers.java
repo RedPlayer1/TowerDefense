@@ -7,6 +7,7 @@ import me.redplayer_1.towerdefense.Geometry.Vector3;
 import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
@@ -48,8 +49,9 @@ public final class Towers {
         }
         if (template == null) return null;
         return new Tower(
-                name, template.getItem(), new BlockMesh(template.getMesh()), template.getParticlePoint(),
-                template.getRange(), template.getDamage(), template.getTargets(), template.getAttackDelay()
+                name, template.getItem(), new BlockMesh(template.getMesh()), template.getParticle(),
+                template.getParticlePoint(), template.getRange(), template.getDamage(), template.getCost(),
+                template.getTargets(), template.getAttackDelay()
         );
     }
 
@@ -100,12 +102,14 @@ public final class Towers {
         for (Tower tower : towers) {
             ConfigurationSection towerSec = section.createSection(tower.name);
             towerSec.set("item", tower.getItem());
+            tower.getMesh().serialize(towerSec, "mesh");
+            tower.getParticlePoint().serialize(towerSec.createSection("particlePoint"));
+            towerSec.set("particle", tower.getParticle().name());
             towerSec.set("range", tower.getRange());
             towerSec.set("damage", tower.getDamage());
+            towerSec.set("cost", tower.getCost());
             towerSec.set("targets", tower.getTargets());
             towerSec.set("attackDelay", tower.getAttackDelay());
-            tower.getParticlePoint().serialize(towerSec.createSection("particlePoint"));
-            tower.getMesh().serialize(towerSec, "mesh");
         }
     }
 
@@ -122,13 +126,15 @@ public final class Towers {
                         towerName,
                         Objects.requireNonNull(towerSec.getItemStack("item")),
                         BlockMesh.deserialize(towerSec.getConfigurationSection("mesh")),
+                        Particle.valueOf(towerSec.getString("particle")),
                         Vector3.deserialize(Objects.requireNonNull(towerSec.getConfigurationSection("particlePoint"))),
                         towerSec.getInt("range"),
                         towerSec.getInt("damage"),
+                        towerSec.getInt("cost"),
                         towerSec.getInt("targets"),
                         towerSec.getInt("attackDelay")
                 ));
-            } catch (InvalidConfigurationException | NullPointerException e) {
+            } catch (InvalidConfigurationException | NullPointerException | IllegalArgumentException e) {
                 MessageUtils.logConsole("Invalid configuration for Tower \"" + towerName + "\"", LogLevel.WARN);
             }
         }
