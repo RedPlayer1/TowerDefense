@@ -29,14 +29,18 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Tower {
+    public static final int RANGE_UNLIMITED = -1;
+    public static final int RANGE_NONE = 0;
     private static final NamespacedKey ID_KEY = new NamespacedKey(TowerDefense.INSTANCE, "tower_id");
     public final String name;
     private ItemStack item;
     private BlockMesh mesh;
     private final LinkedList<Integer> accessiblePathIndices;
     private final Vector3 particlePoint;
-    private int range; /* Range.Unlimited -1, Range.None 0*/
+    private final Particle particle;
+    private int range;
     private int damage;
+    private final int cost;
     private final int targets;
     private final int attackDelay;
     private int cooldown;
@@ -52,13 +56,15 @@ public class Tower {
      * @param targets the maximum number of enemies that the tower should damage every time it attacks
      * @param attackDelay number of ticks before the tower can attack enemies
      */
-    public Tower(@NotNull String name, @NotNull ItemStack item, BlockMesh mesh, Vector3 particlePoint, int range, int damage, int targets, int attackDelay) {
+    public Tower(@NotNull String name, @NotNull ItemStack item, BlockMesh mesh, Particle particle, Vector3 particlePoint, int range, int damage, int cost, int targets, int attackDelay) {
         this.name = name;
         setItem(item);
         this.mesh = mesh;
+        this.particle = particle;
         this.particlePoint = particlePoint;
         this.range = range;
         this.damage = damage;
+        this.cost = cost;
         this.targets = targets;
         this.attackDelay = attackDelay;
         cooldown = attackDelay;
@@ -123,15 +129,15 @@ public class Tower {
             // https://bukkit.org/threads/tutorial-how-to-calculate-vectors.138849
             double distance = startLoc.distance(enemyLoc);
             Vector vec = enemyLoc.clone().subtract(startLoc).toVector().normalize().multiply(particleSpacing);
-            ParticleBuilder particle = new ParticleBuilder(Particle.FIREWORKS_SPARK)
+            ParticleBuilder spawner = new ParticleBuilder(particle)
                     .receivers(owner)
                     .location(startLoc)
                     .count(0)
                     .offset(0, 0, 0);
             for (double pos = 0; pos < distance; pos += particleSpacing) {
                 // noinspection ConstantConditions
-                particle.location().add(vec);
-                particle.spawn();
+                spawner.location().add(vec);
+                spawner.spawn();
             }
         }
     }
@@ -182,6 +188,14 @@ public class Tower {
 
     public Vector3 getParticlePoint() {
         return particlePoint;
+    }
+
+    public Particle getParticle() {
+        return particle;
+    }
+
+    public int getCost() {
+        return cost;
     }
 
     public void setItem(ItemStack item) {

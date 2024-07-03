@@ -10,7 +10,6 @@ import java.util.HashMap;
 public class MeshEditor {
     private static final HashMap<Player, MeshEditor> editors = new HashMap<>();
     private final Player player;
-    Location bottomLeft;
     private final @Nullable Location prevBottomLeft;
     private final BlockMesh mesh;
     private final BlockMesh platform;
@@ -26,7 +25,7 @@ public class MeshEditor {
         this.player = player;
         this.mesh = mesh;
         prevBottomLeft = mesh.getBottomLeft();
-        bottomLeft = player.getLocation().subtract(0, 1, 0);
+        Location bottomLeft = player.getLocation().subtract(0, 1, 0);
         originalArea = new BlockMesh(mesh.width, mesh.depth, mesh.height + 1 /* includes platform */);
         originalArea.setBottomLeft(bottomLeft);
         originalArea.capture(bottomLeft);

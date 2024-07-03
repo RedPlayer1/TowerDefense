@@ -11,6 +11,7 @@ import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.conversations.ConversationContext;
 import org.bukkit.conversations.ConversationFactory;
@@ -33,11 +34,19 @@ import org.jetbrains.annotations.Nullable;
  * </ul>
  */
 public class TowerConversation {
+    private static final String PARTICLES;
+    static {
+        StringBuilder builder = new StringBuilder();
+        for (Particle p : Particle.values()) {
+            builder.append(p.name()).append('\n');
+        }
+        PARTICLES = builder.toString();
+    }
     private static final Object CAN_CANCEL = new Object();
     private final TowerFactory factory = new TowerFactory();
 
     // Prompts (ordered last to first)
-    private final ValidatingPrompt particlePrompt = new ValidatingPrompt() {
+    private final ValidatingPrompt particlePointPrompt = new ValidatingPrompt() {
         @Override
         protected boolean isInputValid(@NotNull ConversationContext context, @NotNull String input) {
             BlockMesh mesh = factory.getMesh();
@@ -75,18 +84,42 @@ public class TowerConversation {
         }
     };
 
-    private final NumericPrompter targetPrompt = new NumericPrompter("Max Targets", (ctx, num) -> {
-        // set max targets & place mesh for the particle prompt
-        factory.setTargets(num);
-        BlockMesh mesh = factory.getMesh();
-        assert mesh != null;
-        Location bL = mesh.getBottomLeft();
-        assert bL != null; // this is set in the constructor
-        mesh.place(bL);
-        // don't allow the player to cancel the builder when the mesh is placed
-        ctx.setSessionData(CAN_CANCEL, false);
-    }, particlePrompt);
+    private final ValidatingPrompt particlePrompt = new ValidatingPrompt() {
+        @Override
+        protected boolean isInputValid(@NotNull ConversationContext context, @NotNull String input) {
+            if (input.equalsIgnoreCase("list")) {
+                Object player = context.getSessionData("player");
+                assert player instanceof Player;
+                ((Player) player).sendPlainMessage(PARTICLES);
+            } else {
+                try {
+                    context.setSessionData("particle", Particle.valueOf(input));
+                    return true;
+                } catch (IllegalArgumentException ignored) { }
+            }
+            return false;
+        }
 
+        @Override
+        protected Prompt acceptValidatedInput(@NotNull ConversationContext context, @NotNull String input) {
+            factory.setParticle((Particle) context.getSessionData("particle"));
+            BlockMesh mesh = factory.getMesh();
+            assert mesh != null;
+            Location bL = mesh.getBottomLeft();
+            assert bL != null; // this is set in the constructor
+            mesh.place(bL);
+            // don't allow the player to cancel the builder when the mesh is placed
+            context.setSessionData(CAN_CANCEL, false);
+            return particlePointPrompt;
+        }
+
+        @Override
+        public @NotNull String getPromptText(@NotNull ConversationContext context) {
+            return "Particle (type \"list\" for all options";
+        }
+    };
+
+    private final NumericPrompter targetPrompt = new NumericPrompter("Max Targets", (ctx, num) -> factory.setTargets(num), particlePrompt);
     private final NumericPrompter attackPrompt = new NumericPrompter("Attack Cooldown", (c, i) -> factory.setAttackDelay(i), targetPrompt);
     private final NumericPrompter costPrompt = new NumericPrompter("Cost", (c, i) -> factory.setCost(i), attackPrompt);
     private final NumericPrompter damagePrompt = new NumericPrompter("Damage", (c, i) -> factory.setDamage(i), costPrompt);

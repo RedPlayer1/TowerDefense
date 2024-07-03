@@ -25,7 +25,7 @@ public class Config {
         this(new File(TowerDefense.INSTANCE.getDataFolder().getPath() + "/" + fileName + ".yml"));
     }
 
-    public Config(File configFile) throws IOException, InvalidConfigurationException {
+    public Config(File configFile) throws IOException {
         file = configFile;
         if (!file.exists()) {
             file.getParentFile().mkdirs();

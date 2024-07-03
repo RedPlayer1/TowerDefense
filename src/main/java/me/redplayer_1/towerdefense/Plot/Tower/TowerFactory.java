@@ -3,12 +3,14 @@ package me.redplayer_1.towerdefense.Plot.Tower;
 import me.redplayer_1.towerdefense.Geometry.BlockMesh;
 import me.redplayer_1.towerdefense.Geometry.MeshEditor;
 import me.redplayer_1.towerdefense.Geometry.Vector3;
+import org.bukkit.Particle;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 public class TowerFactory {
     private @Nullable String name;
     private @Nullable ItemStack item;
+    private @Nullable Particle particle;
     private @Nullable Vector3 particlePoint;
     private int range;
     private int damage;
@@ -24,24 +26,27 @@ public class TowerFactory {
      */
     public TowerFactory() {
         // set all vars to invalid values
-        name = null;
-        item = null;
         range = -2;
-        damage = 0;
-        targets = 0;
+        damage = -1;
+        targets = -1;
         attackDelay = -1;
-        mesh = null;
-        editor = null;
+        cost = -1;
     }
 
     /**
-     * Create sa new TowerFactory with values supplied by a preexisting tower
+     * Creates a new TowerFactory with values supplied by a preexisting tower
      * @param tower the tower to get values from
      */
     public TowerFactory(Tower tower) {
         name = tower.name;
         item = tower.getItem();
+        particle = tower.getParticle();
+        particlePoint = tower.getParticlePoint();
         range = tower.getRange();
+        damage = tower.getDamage();
+        targets = tower.getTargets();
+        attackDelay = tower.getAttackDelay();
+        cost = tower.getCost();
         mesh = tower.getMesh();
         editor = null;
     }
@@ -73,6 +78,11 @@ public class TowerFactory {
 
     public TowerFactory setEditor(MeshEditor editor) {
         this.editor = editor;
+        return this;
+    }
+
+    public TowerFactory setParticle(Particle particle) {
+        this.particle = particle;
         return this;
     }
 
@@ -118,14 +128,14 @@ public class TowerFactory {
      * @throws IllegalStateException if any of the required fields are not set or have invalid values
      */
     public Tower build() throws IllegalStateException {
-        if (name == null || item == null || range <= -2 || targets <= 0 || attackDelay < 0
-                || (mesh == null && editor == null) || particlePoint == null)
-        {
+        if (name == null || item == null || particle == null || particlePoint == null || range <= -2 || damage < 0
+                || targets < 0 || attackDelay < 0 || cost < 0 || (mesh == null && editor == null)
+        ) {
             throw new IllegalStateException("Missing required factory field(s)");
         }
         return new Tower(
-                name, item, mesh != null? mesh : editor.close(true),
-                particlePoint, range, damage, targets, attackDelay
+                name, item, mesh != null? mesh : editor.close(true), particle,
+                particlePoint, range, damage, cost, targets, attackDelay
         );
     }
 }
