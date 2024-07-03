@@ -78,6 +78,13 @@ public class Layout {
 
     public void start(TDPlayer parent) {
         // TODO: handle wave spawning & pass/fail
+        /*
+        Wave equations (WIP):
+        enemy count: y = x^(1/2) + 4
+        *enemy health: y=1.5x + 10
+        *predicted tower damage
+        *enemy coin yield (% of health?)
+         */
         spawner = Bukkit.getScheduler().runTaskTimer(TowerDefense.INSTANCE, () -> {
             // FIXME: don't spawn a static number of enemies
             if (enemies.size() < 5) {
