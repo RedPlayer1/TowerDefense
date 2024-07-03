@@ -28,12 +28,12 @@ public class Config {
     public Config(File configFile) throws IOException {
         file = configFile;
         if (!file.exists()) {
-            file.getParentFile().mkdirs();
+            if (!file.getParentFile().mkdirs()) throw new IOException("Couldn't create parent directories");
             InputStream inputStream = Config.class.getClassLoader().getResourceAsStream(file.getName());
             if (inputStream != null) {
                 Files.copy(inputStream, file.toPath());
             } else {
-                file.createNewFile();
+                if (!file.createNewFile()) throw new IOException("Couldn't create file");
             }
         }
 
