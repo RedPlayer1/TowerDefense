@@ -40,7 +40,7 @@ public final class TowerDefense extends JavaPlugin {
             layoutTemplates = new Config("LayoutTemplates");
             towerTemplates = new Config("TowerTemplates");
         } catch (IOException | InvalidConfigurationException e) {
-            MessageUtils.logConsole("Couldn't loading configuration files!", LogLevel.CRITICAL);
+            MessageUtils.logConsole("Couldn't load configuration files!", LogLevel.CRITICAL);
             getLogger().severe(e.getMessage());
             Bukkit.getPluginManager().disablePlugin(this);
             return;
