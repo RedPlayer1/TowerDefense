@@ -20,14 +20,15 @@ public final class Layouts {
      * set accordingly.
      * @param name the name of the layout
      * @param bottomLeft the bottom left coordinate of the layout's placement
+     * @param wave the wave that the layout is on
      * @return a usable copy of the layout template
      */
-    public static @Nullable Layout getLayout(String name, Location bottomLeft) {
+    public static @Nullable Layout getLayout(String name, Location bottomLeft, int wave) {
         for (Layout layout : templates) {
             if (layout.getName().equals(name)) {
                 BlockMesh mesh = new BlockMesh(layout.getMesh());
                 mesh.place(bottomLeft);
-                return new Layout(name, layout.getStartLocation(), mesh, layout.getPath());
+                return new Layout(name, layout.getStartLocation(), mesh, layout.getPath(), wave);
             }
         }
         return null;
@@ -36,7 +37,7 @@ public final class Layouts {
     /**
      * Gets the template with the provided name or null if it doesn't exist.
      * If a layout is a template, its mesh will not have a bottomLeft,
-     * For a placeable version of a template, see {@link #getLayout(String, Location) getLayout}
+     * For a placeable version of a template, see {@link #getLayout(String, Location, int) getLayout}
      * @param name the name of the template
      * @return the corresponding template or null if it didn't exist
      */

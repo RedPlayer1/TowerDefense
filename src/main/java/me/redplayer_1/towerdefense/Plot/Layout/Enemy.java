@@ -72,8 +72,8 @@ public class Enemy {
             // move until the entity is on a different block, then get the next direction
             Location destination = currentDirection.toLocation(entity.getLocation(), .1);
             if (!entity.teleport(destination)) {
-                deathType = DeathType.PATH;
-                kill();
+                // if the entity doesn't exist, it must have been killed by a tower
+                kill(DeathType.HEALTH);
                 task.cancel();
                 return;
             }
@@ -88,7 +88,7 @@ public class Enemy {
                 try {
                     currentDirection = path[pathIndex];
                 } catch (IndexOutOfBoundsException e) {
-                    kill();
+                    kill(DeathType.PATH);
                     task.cancel();
                 }
             }
@@ -138,16 +138,22 @@ public class Enemy {
     }
 
     /**
-     * Kill the enemy and remove its entity
+     * Kill the enemy and remove its entity. Does nothing if the enemy is already dead.
      * @apiNote death type for the enemy will be {@link DeathType#HEALTH HEALTH}
      */
     public void kill() {
-        deathType = DeathType.HEALTH;
-        alive = false;
-        entity.remove();
-        healthDisplay.remove();
-        if (deathEventHandler != null) {
-            deathEventHandler.accept(this);
+        kill(DeathType.HEALTH);
+    }
+
+    private void kill(DeathType deathType) {
+        this.deathType = deathType;
+        if (alive) {
+            alive = false;
+            entity.remove();
+            healthDisplay.remove();
+            if (deathEventHandler != null) {
+                deathEventHandler.accept(this);
+            }
         }
     }
 
@@ -155,7 +161,7 @@ public class Enemy {
      * Sets the function to run when the enemy is killed. When this function is run, the enemy will already be dead.
      * @param handler the function
      */
-    public void onDeath(Consumer<Enemy> handler) {
+    public void setDeathHandler(@Nullable Consumer<Enemy> handler) {
         deathEventHandler = handler;
     }
 

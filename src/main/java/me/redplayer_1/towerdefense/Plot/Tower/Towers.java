@@ -70,15 +70,6 @@ public final class Towers {
     }
 
     /**
-     * Opens an attribute editor inventory for the tower. Any changes made are automatically applied to the tower
-     * @param player the player to open the inventory for
-     * @param tower the tower to edit
-     */
-    public static void openAttributeEditorInventory(Player player, Tower tower) {
-        // TODO: open inventory & take player input (chat/sign/anvil paper)
-    }
-
-    /**
      * Creates a new {@link MeshEditor MeshEditor} for a tower template
      * @param player the player editing the tower
      * @param towerName the name of the tower to edit

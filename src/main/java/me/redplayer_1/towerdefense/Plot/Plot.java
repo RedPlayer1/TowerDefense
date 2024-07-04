@@ -52,17 +52,18 @@ public class Plot {
      * @throws NoLayoutFoundException if no default layout exists
      */
     public Plot() throws NotEnoughPlotSpaceException, NoLayoutFoundException {
-        this(null);
+        this(null, 1);
     }
 
     /**
      * Create a new plot and add it to the plot grid
      * @param layoutName The name plot's layout. If null, the default layout will be used
+     * @param layoutWave The wave that the layout should start on.
      * @throws NotEnoughPlotSpaceException if the plot grid is full or the grid's origin isn't set
      * @throws NoLayoutFoundException if the {@link Layout#defaultLayout default layout} should be used
      * (layout param is null) but it isn't set
      */
-    public Plot(@Nullable String layoutName) throws NotEnoughPlotSpaceException, NoLayoutFoundException {
+    public Plot(@Nullable String layoutName, int layoutWave) throws NotEnoughPlotSpaceException, NoLayoutFoundException {
         if (gridOrigin == null || gridOrigin.getWorld() == null) {
             throw new NotEnoughPlotSpaceException("Grid origin not initialized");
         }
@@ -89,7 +90,7 @@ public class Plot {
 
         // clear the plot area and place the layout
         new BlockMesh(Layout.SIZE, Layout.SIZE, Layout.SIZE).place(getBottomLeft());
-        layout = Layouts.getLayout(layoutName, getBottomLeft());
+        layout = Layouts.getLayout(layoutName, getBottomLeft(), layoutWave);
         Bukkit.broadcast(Component.text("NEW PLOT CREATE w/ Layout " + (this.layout != null? this.layout.getName() : "null") + " @ " + MessageUtils.locationToString(getBottomLeft())));
     }
 
@@ -184,16 +185,17 @@ public class Plot {
      * Deserialize a plot from a ConfigurationSection. Invalid tower data will be logged to the console while
      * unrecoverable errors will be thrown.
      * @param section the section containing the serialized plot
+     * @param layoutWave the wave that the plot's layout is on
      * @return the deserialized plot
      * @throws NotEnoughPlotSpaceException if the new plot cannot be created because there isn't enough room in the grid
      * @throws NoLayoutFoundException if the plot's layout doesn't exist or if the config value is missing
      * @throws InvalidConfigurationException if a required Yaml section/value doesn't exist
      */
-    public static Plot deserialize(ConfigurationSection section) throws NotEnoughPlotSpaceException, NoLayoutFoundException, InvalidConfigurationException {
+    public static Plot deserialize(ConfigurationSection section, int layoutWave) throws NotEnoughPlotSpaceException, NoLayoutFoundException, InvalidConfigurationException {
         // get layout & create plot
         String layoutName = section.getString("layout");
         if (!Layouts.isTemplate(layoutName)) throw new NoLayoutFoundException("Layout name isn't in the config");
-        Plot plot = new Plot(layoutName);
+        Plot plot = new Plot(layoutName, layoutWave);
         // load & place towers
         ConfigurationSection towerSection = section.getConfigurationSection("towers");
         if (towerSection == null) {

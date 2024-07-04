@@ -20,6 +20,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Layout {
     public static final int SIZE = 11; // in blocks (including border)
@@ -30,8 +31,9 @@ public class Layout {
     private final BlockMesh mesh; // the prebuilt blocks in the layout
     private final Grid grid;
     private final Direction[] path;
-    private LinkedList<Enemy> enemies;
-    private LinkedList<Tower> towers;
+    private final LinkedList<Enemy> enemies;
+    private final LinkedList<Tower> towers;
+    private final WaveManager waveManager;
     private BukkitTask spawner = null;
     private BukkitTask attacker = null;
     private float enemyTickRate;
@@ -44,7 +46,7 @@ public class Layout {
      * @param path the path that enemies will take
      * @see Layouts
      */
-    public Layout(String name, Vector3 startLoc, BlockMesh mesh, Direction[] path) {
+    public Layout(String name, Vector3 startLoc, BlockMesh mesh, Direction[] path, int wave) {
         if (mesh.getBottomLeft() == null) {
             throw new IllegalArgumentException("Bottom left must not be null (mesh needs to be placed first)");
         }
@@ -54,6 +56,7 @@ public class Layout {
         grid = new Grid(SIZE, SIZE);
         this.path = path;
         addPathToGrid();
+        waveManager = new WaveManager(wave);
         towers = new LinkedList<>();
         enemies = new LinkedList<>();
     }
@@ -77,19 +80,31 @@ public class Layout {
     }
 
     public void start(TDPlayer parent) {
-        // TODO: handle wave spawning & pass/fail
-        /*
-        Wave equations (WIP):
-        enemy count: y = x^(1/2) + 4
-        *enemy health: y=1.5x + 10
-        *predicted tower damage
-        *enemy coin yield (% of health?)
-         */
+        AtomicInteger killed = new AtomicInteger();
         spawner = Bukkit.getScheduler().runTaskTimer(TowerDefense.INSTANCE, () -> {
             // FIXME: don't spawn a static number of enemies
-            if (enemies.size() < 5) {
+            if (enemies.size() < waveManager.getEnemyCount()) {
                 parent.getPlayer().sendPlainMessage("Enemy spawned");
-                spawnEnemy();
+                Enemy enemy = spawnEnemy();
+                enemy.setDeathHandler((e) -> {
+                    if (e.getDeathType() == Enemy.DeathType.PATH) {
+                        // wave failed because enemy reached the end
+                        waveManager.setWave(waveManager.getWave() - 1);
+                        killAllEnemies(false);
+                        killed.set(0);
+                        MessageUtils.log(parent.getPlayer(), "Wave failed! Sent back to wave " + waveManager.getWave(), LogLevel.NOTICE);
+                    } else {
+                        killed.incrementAndGet();
+                        parent.giveMoney(waveManager.getEnemyCoinYield());
+                        MessageUtils.log(parent.getPlayer(), "You killed an enemy", LogLevel.DEBUG);
+                    }
+                });
+                enemies.add(enemy);
+            } else if (killed.get() >= waveManager.getEnemyCount()) {
+                MessageUtils.log(parent.getPlayer(), "wave " + waveManager.getWave() + " completed with " + enemies.size() + " enemies still spawned", LogLevel.DEBUG);
+                killAllEnemies(true);
+                killed.set(0);
+                waveManager.next();
             }
         }, 0, 20);
 
@@ -104,7 +119,8 @@ public class Layout {
     }
 
     /**
-     * Stops the spawning of entities and kills existing ones
+     * Stops the spawning of entities and kills existing ones.
+     * @apiNote the enemy's death handler will not be triggered when it is killed by this function
      */
     public void stop() {
         if (spawner != null) {
@@ -113,8 +129,17 @@ public class Layout {
         if (attacker != null) {
             attacker.cancel();
         }
-        enemies.forEach(Enemy::kill);
-        enemies.clear();
+        killAllEnemies(false);
+    }
+
+    private void killAllEnemies(boolean triggerHandler) {
+        while (!enemies.isEmpty()) {
+            Enemy toRemove = enemies.removeFirst();
+            if (!triggerHandler) {
+                toRemove.setDeathHandler(null);
+            }
+            toRemove.kill();
+        }
     }
 
     /**
@@ -127,17 +152,17 @@ public class Layout {
     /**
      * Spawn a new enemy on the layout
      */
-    public void spawnEnemy() {
+    private Enemy spawnEnemy() {
         Location bL = mesh.getBottomLeft();
         BlockDisplay display = (BlockDisplay) bL.getWorld().spawnEntity(bL, EntityType.BLOCK_DISPLAY);
         display.setBlock(Material.SMOOTH_STONE_SLAB.createBlockData());
-        enemies.add(new Enemy(
+        return new Enemy(
                 display,
                 .6,
-                20, // TODO: make health change w/ waves
+                waveManager.getEnemyHealth(),
                 startLoc.toLocation(mesh.getBottomLeft().getWorld()).add(mesh.getBottomLeft()).add(0, 1, 0),
                 path
-        ));
+        );
     }
 
     /**
@@ -232,6 +257,10 @@ public class Layout {
         return grid;
     }
 
+    public int getWave() {
+        return waveManager.getWave();
+    }
+
     /**
      * Serializes this layout into a new child section (with this layout's name) of the root section
      * @param rootSection the section to store the serialized data in
@@ -242,6 +271,7 @@ public class Layout {
         mesh.serialize(section, "blockMesh");
         section.set("path", Arrays.stream(path).map(Enum::name).toList());
         section.set("tickRate", enemyTickRate);
+        // don't serialize wave because it is saved with the player
     }
 
 
@@ -264,7 +294,8 @@ public class Layout {
                 section.getName(),
                 Vector3.deserialize(section.getConfigurationSection("startLoc")),
                 mesh,
-                section.getStringList("path").stream().map(Direction::valueOf).toArray(Direction[]::new)
+                section.getStringList("path").stream().map(Direction::valueOf).toArray(Direction[]::new),
+                1
         );
         if (section.contains("tickRate")) {
             layout.enemyTickRate = Float.parseFloat(section.getString("tickRate", "0"));

@@ -158,7 +158,7 @@ public class LayoutEditor {
         if (startLoc == null) return;
         if (name != null) Layouts.removeTemplate(name); // ensure there no duplicates
         Vector3 relLoc = placementArea.toRelativeLocation(startLoc);
-        Layouts.addTemplate(new Layout(name, relLoc, close(), path.toArray(new Direction[0])));
+        Layouts.addTemplate(new Layout(name, relLoc, close(), path.toArray(new Direction[0]), 1));
     }
 
     /**

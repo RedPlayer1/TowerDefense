@@ -26,7 +26,8 @@ public class Config {
     public Config(File configFile) throws IOException {
         file = configFile;
         if (!file.exists()) {
-            if (!file.getParentFile().mkdirs()) throw new IOException("Couldn't create parent directories");
+            if (!(file.getParentFile().exists() || file.getParentFile().mkdirs()))
+                throw new IOException("Couldn't create parent directories");
             InputStream inputStream = Config.class.getClassLoader().getResourceAsStream(file.getName());
             if (inputStream != null) {
                 Files.copy(inputStream, file.toPath());

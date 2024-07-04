@@ -52,7 +52,7 @@ public class TDPlayer {
             }
         }
         if (!foundConfig) {
-            // int types (money, prestige, etc) are 0 by default & don't need to be set
+            // int types (money, prestige, etc.) are 0 by default & don't need to be set
             plot = new Plot();
         }
         if (TDPlayer.isPrivileged(player)) {
@@ -82,8 +82,19 @@ public class TDPlayer {
         return wave;
     }
 
-    public void setWave(int wave) {
-        this.wave = wave;
+    /**
+     * Adds the given amount to the player's money.
+     * If the amount is negative, player's balance will be decreased by that amount
+     */
+    public void giveMoney(int amount) {
+        money += amount;
+        if (money < 0) {
+            money = 0;
+        }
+    }
+
+    public void setMoney(int money) {
+        this.money = money;
     }
 
     /**
@@ -105,6 +116,7 @@ public class TDPlayer {
             fConfig.set("money", money);
             fConfig.set("prestige", prestige);
             fConfig.set("multiplier", multiplier);
+            fConfig.set("wave", plot.getLayout().getWave());
             plot.serialize(fConfig.createSection("plot"));
             config.save();
         } catch (IOException e) {
@@ -122,11 +134,12 @@ public class TDPlayer {
                 Bukkit.getPlayer(UUID.fromString(config.getFile().getName().replace(".yml", ""))),
                 false
         );
-        player.plot = Plot.deserialize(fConfig.getConfigurationSection("plot"));
+        player.wave = fConfig.getInt("wave", 1);
         player.money = fConfig.getInt("money");
         player.prestige = fConfig.getInt("prestige");
         player.multiplier = fConfig.getInt("multiplier");
         player.wave = fConfig.getInt("multiplier");
+        player.plot = Plot.deserialize(fConfig.getConfigurationSection("plot"), player.wave);
         return player;
     }
 }
