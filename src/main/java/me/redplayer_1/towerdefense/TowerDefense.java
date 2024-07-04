@@ -85,8 +85,15 @@ public final class TowerDefense extends JavaPlugin {
             layout.serialize(layoutConfig);
         }
         Towers.serialize(towerTemplates.getConfig());
-        mainConfig.save();
-        layoutTemplates.save();
-        towerTemplates.save();
+        try {
+            mainConfig.save();
+            layoutTemplates.save();
+            towerTemplates.save();
+        } catch (IOException e) {
+            MessageUtils.logConsole(
+                    "An IOException occurred whilst serializing the main, layout, and/or tower config(s)",
+                    LogLevel.CRITICAL
+            );
+        }
     }
 }
