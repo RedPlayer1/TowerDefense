@@ -111,7 +111,7 @@ public class LayoutEditor {
     public void addNode(Direction direction) throws NodeOutOfBoundsException {
         if (startLoc == null) throw new IllegalStateException("Cannot add a node without a start location");
         if (!path.isEmpty()) {
-            currentNodeLoc = direction.toLocation(currentNodeLoc, 1);
+            currentNodeLoc = path.getLast().toLocation(currentNodeLoc, 1);
         }
         if (!placementArea.contains(currentNodeLoc)) {
             currentNodeLoc = direction.toLocation(currentNodeLoc, -1);

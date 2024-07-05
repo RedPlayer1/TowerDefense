@@ -15,6 +15,8 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Transformation;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 public class Enemy {
@@ -24,7 +26,7 @@ public class Enemy {
     private int pathIndex;
     private final Entity entity;
     private final TextDisplay healthDisplay;
-    private Location currentBlock;
+    private Location crossover;
     private Direction currentDirection;
     private @Nullable DeathType deathType;
     private @Nullable Consumer<Enemy> deathEventHandler;
@@ -41,7 +43,7 @@ public class Enemy {
         alive = true;
         this.health = health;
         pathIndex = 0;
-        currentBlock = start;
+        crossover = start.toCenterLocation();
         currentDirection = path[pathIndex];
 
         // ensure entity is set up correctly
@@ -68,29 +70,40 @@ public class Enemy {
         updateHealthDisplay();
 
         // start movement along path
+        final double moveDist = .1;
+        final double halfMoves = 1 / moveDist / 2; // teleports needed to move to the halfway point
+        AtomicBoolean previousMoveBeforeHalf = new AtomicBoolean();
+        AtomicInteger move = new AtomicInteger();
         Bukkit.getScheduler().runTaskTimer(TowerDefense.INSTANCE, (task) -> {
             // move until the entity is on a different block, then get the next direction
-            Location destination = currentDirection.toLocation(entity.getLocation(), .1);
-            if (!entity.teleport(destination)) {
+            Location loc = currentDirection.toLocation(entity.getLocation(), moveDist);
+            if (!entity.teleport(loc)) {
                 // if the entity doesn't exist, it must have been killed by a tower
                 kill(DeathType.HEALTH);
                 task.cancel();
                 return;
             }
-            healthDisplay.teleport(destination.add(0, entityHeight, 0));
-            Location loc = entity.getLocation();
-            if (
-                    loc.getBlockX() != currentBlock.getBlockX()
-                    || loc.getBlockZ() != currentBlock.getBlockZ()
-            ) {
-                pathIndex++;
-                currentBlock = loc.clone();
-                try {
-                    currentDirection = path[pathIndex];
-                } catch (IndexOutOfBoundsException e) {
+            healthDisplay.teleport(loc.add(0, entityHeight, 0));
+            loc.add(.5, -entityHeight, .5); // center the location
+
+            double x = Math.abs(loc.getX());
+            double z = Math.abs(loc.getZ());
+            if (x - (int) x >= .5 && z - (int) z >= .5) {
+                // if not on the last tile, keep moving to the next block
+                if (pathIndex < path.length - 1) {
+                    // if the enemy has just crossed over the halfway line of the block, increment the pathIndex
+                    if (previousMoveBeforeHalf.get()) {
+                        pathIndex++;
+                        currentDirection = path[pathIndex];
+                        previousMoveBeforeHalf.set(false);
+                    }
+                } else {
+                    // kill the enemy because the end of the path was reached
                     kill(DeathType.PATH);
                     task.cancel();
                 }
+            } else {
+                previousMoveBeforeHalf.set(true);
             }
         }, 0, 1 /* when a mob is teleported every tick, it plays the walking animation */);
     }
