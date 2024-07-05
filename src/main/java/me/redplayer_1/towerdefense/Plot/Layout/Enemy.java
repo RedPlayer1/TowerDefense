@@ -26,7 +26,6 @@ public class Enemy {
     private int pathIndex;
     private final Entity entity;
     private final TextDisplay healthDisplay;
-    private Location crossover;
     private Direction currentDirection;
     private @Nullable DeathType deathType;
     private @Nullable Consumer<Enemy> deathEventHandler;
@@ -43,7 +42,6 @@ public class Enemy {
         alive = true;
         this.health = health;
         pathIndex = 0;
-        crossover = start.toCenterLocation();
         currentDirection = path[pathIndex];
 
         // ensure entity is set up correctly
@@ -71,7 +69,7 @@ public class Enemy {
 
         // start movement along path
         final double moveDist = .1;
-        final double halfMoves = 1 / moveDist / 2; // teleports needed to move to the halfway point
+        final double halfMoves = 1 / moveDist; // teleports needed to move to the halfway point
         AtomicBoolean previousMoveBeforeHalf = new AtomicBoolean();
         AtomicInteger move = new AtomicInteger();
         Bukkit.getScheduler().runTaskTimer(TowerDefense.INSTANCE, (task) -> {
@@ -86,13 +84,12 @@ public class Enemy {
             healthDisplay.teleport(loc.add(0, entityHeight, 0));
             loc.add(.5, -entityHeight, .5); // center the location
 
-            double x = Math.abs(loc.getX());
-            double z = Math.abs(loc.getZ());
-            if (x - (int) x >= .5 && z - (int) z >= .5) {
+            if (move.incrementAndGet() >= halfMoves) {
                 // if not on the last tile, keep moving to the next block
                 if (pathIndex < path.length - 1) {
                     // if the enemy has just crossed over the halfway line of the block, increment the pathIndex
                     if (previousMoveBeforeHalf.get()) {
+                        move.set(0);
                         pathIndex++;
                         currentDirection = path[pathIndex];
                         previousMoveBeforeHalf.set(false);
