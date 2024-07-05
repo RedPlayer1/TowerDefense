@@ -13,6 +13,7 @@ import me.redplayer_1.towerdefense.Util.ItemUtils;
 import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.*;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -97,7 +98,7 @@ public class Tower {
         int attacked = 0;
         for (Enemy e : enemies) {
             if (attacked >= targets) return;
-            if (accessiblePathIndices.contains(e.getPathIndex())) {
+            if (e.isAlive() && accessiblePathIndices.contains(e.getPathIndex())) {
                 attack(e, owner, particleSpacing, true);
                 attacked++;
             }
@@ -120,7 +121,8 @@ public class Tower {
     }
 
     private void attack(Enemy enemy, Player owner, double particleSpacing, boolean spawnParticles) {
-        Location enemyLoc = enemy.getEntity().getLocation().toCenterLocation();
+        Entity entity = enemy.getEntity();
+        Location enemyLoc = entity.getLocation().add(.5, 0, .5);
         Location startLoc = mesh.fromRelativeLocation(particlePoint, enemyLoc.getWorld()).toCenterLocation();
         if (mesh.getBottomLeft() == null) {
             throw new IllegalStateException("The tower must be placed before it can attack");

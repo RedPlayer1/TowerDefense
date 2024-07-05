@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import static me.redplayer_1.towerdefense.Util.MessageUtils.log;
 
 public class LayoutEditor {
+    private static final float ARROW_SCALE = .5f;
     private static final Material PLATFORM_BASE = Material.STONE_BRICKS;
     private static final HashMap<Player, LayoutEditor> openEditors = new HashMap<>();
     private static final ItemStack[] toolInventory = {
@@ -117,7 +118,7 @@ public class LayoutEditor {
             throw new NodeOutOfBoundsException();
         }
         BlockDisplay node = (BlockDisplay) startLoc.getWorld().spawnEntity(
-                new Location(startLoc.getWorld(), currentNodeLoc.getBlockX() - .5, currentNodeLoc.y() + 1, currentNodeLoc.getBlockZ() - .5),
+                new Location(startLoc.getWorld(), currentNodeLoc.getBlockX() + ARROW_SCALE / 2, currentNodeLoc.y() + 1, currentNodeLoc.getBlockZ() + ARROW_SCALE / 2),
                 EntityType.BLOCK_DISPLAY
         );
         final Direction finalDirection = direction;
@@ -133,7 +134,7 @@ public class LayoutEditor {
         }));
         node.setGlowing(true);
         Transformation t = node.getTransformation();
-        t.getScale().set(.5f);
+        t.getScale().set(ARROW_SCALE);
         node.setTransformation(t);
         placedNodes.add(node);
         path.add(direction);

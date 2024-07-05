@@ -111,7 +111,7 @@ public class Layout {
         attacker = Bukkit.getScheduler().runTaskTimer(TowerDefense.INSTANCE, () -> {
             for (Tower tower : towers) {
                 if (tower.canAttack()) {
-                    tower.attack(enemies, parent.getPlayer(), .1);
+                    tower.attack(enemies, parent.getPlayer(), .4);
                 }
                 tower.tick();
             }
