@@ -48,6 +48,10 @@ public class LayoutCommand extends Command {
         switch (args[0].toLowerCase()) {
             case "create" -> new LayoutEditor(player);
             case "edit" -> {
+                if (LayoutEditor.getEditor(player) != null) {
+                    log(player, "You already have an open editor", LogLevel.ERROR);
+                    break;
+                }
                 if (args.length >= 2) {
                     Layout layout = Layouts.getTemplate(args[1]);
                     if (layout != null) {

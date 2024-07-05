@@ -82,9 +82,7 @@ public class Layout {
     public void start(TDPlayer parent) {
         AtomicInteger killed = new AtomicInteger();
         spawner = Bukkit.getScheduler().runTaskTimer(TowerDefense.INSTANCE, () -> {
-            // FIXME: don't spawn a static number of enemies
             if (enemies.size() < waveManager.getEnemyCount()) {
-                parent.getPlayer().sendPlainMessage("Enemy spawned");
                 Enemy enemy = spawnEnemy();
                 enemy.setDeathHandler((e) -> {
                     if (e.getDeathType() == Enemy.DeathType.PATH) {
@@ -96,12 +94,11 @@ public class Layout {
                     } else {
                         killed.incrementAndGet();
                         parent.giveMoney(waveManager.getEnemyCoinYield());
-                        MessageUtils.log(parent.getPlayer(), "You killed an enemy", LogLevel.DEBUG);
                     }
                 });
                 enemies.add(enemy);
             } else if (killed.get() >= waveManager.getEnemyCount()) {
-                MessageUtils.log(parent.getPlayer(), "wave " + waveManager.getWave() + " completed with " + enemies.size() + " enemies still spawned", LogLevel.DEBUG);
+                MessageUtils.log(parent.getPlayer(), "Wave " + waveManager.getWave() + " completed!", LogLevel.SUCCESS);
                 killAllEnemies(true);
                 killed.set(0);
                 waveManager.next();
@@ -111,7 +108,7 @@ public class Layout {
         attacker = Bukkit.getScheduler().runTaskTimer(TowerDefense.INSTANCE, () -> {
             for (Tower tower : towers) {
                 if (tower.canAttack()) {
-                    tower.attack(enemies, parent.getPlayer(), .4);
+                    tower.attack(enemies, parent.getPlayer(), .15);
                 }
                 tower.tick();
             }

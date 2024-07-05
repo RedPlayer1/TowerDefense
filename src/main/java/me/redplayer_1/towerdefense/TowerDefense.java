@@ -16,6 +16,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandMap;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -94,6 +95,11 @@ public final class TowerDefense extends JavaPlugin {
                     "An IOException occurred whilst serializing the main, layout, and/or tower config(s)",
                     LogLevel.CRITICAL
             );
+        }
+
+        // PlayerQuitEvent isn't triggered when the server stops, so players must be kicked to trigger it
+        for (Player p : getServer().getOnlinePlayers()) {
+            p.kick(MessageUtils.asMiniMessage("<dark_red>Server Closed</dark_red>"));
         }
     }
 }
