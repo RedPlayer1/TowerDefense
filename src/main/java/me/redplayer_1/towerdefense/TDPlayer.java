@@ -97,6 +97,10 @@ public class TDPlayer {
         this.money = money;
     }
 
+    public int getMoney() {
+        return money;
+    }
+
     /**
      * @return the TDPlayer associated with the Bukkit Player or null if one doesn't exist
      */

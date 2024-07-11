@@ -32,7 +32,7 @@ import java.util.List;
 public class Tower {
     public static final int RANGE_UNLIMITED = -1;
     public static final int RANGE_NONE = 0;
-    private static final NamespacedKey ID_KEY = new NamespacedKey(TowerDefense.INSTANCE, "tower_id");
+    protected static final NamespacedKey ID_KEY = new NamespacedKey(TowerDefense.INSTANCE, "tower_id");
     public final String name;
     private ItemStack item;
     private BlockMesh mesh;

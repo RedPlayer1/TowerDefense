@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'idea'
+    id "com.github.johnrengelman.shadow" version "7.1.2"
 }
 
 group = 'me.redplayer_1'
@@ -20,7 +21,11 @@ repositories {
 
 dependencies {
     compileOnly "io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT"
-    implementation "com.github.stefvanschie.inventoryframework:IF:0.10.14"
+    implementation "com.github.stefvanschie.inventoryframework:IF:0.10.15"
+}
+
+shadowJar {
+    relocate 'com.github.stefvanschie.inventoryframework', 'me.redplayer_1.towerdefense.inventoryframework'
 }
 
 idea {
@@ -58,6 +63,7 @@ processResources {
 }
 
 tasks.withType(Jar).configureEach {
+    shadowJar
     String outputDir = findProperty("outputDir")
     if (outputDir != null && outputDir != '') {
         destinationDirectory = file(outputDir)

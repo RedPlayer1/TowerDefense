@@ -184,7 +184,7 @@ public class Layout {
         BlockMesh towerMesh = tower.getMesh();
         GridItem towerItem = new Tower.Item(tower, towerMesh.width, towerMesh.depth);
         Vector3 relLoc = this.mesh.toRelativeLocation(location);
-        if (towerMesh.canPlace(location) && grid.canAdd(towerItem, relLoc.x, relLoc.z)) {
+        if (relLoc.y == 1 && towerMesh.canPlace(location) && grid.canAdd(towerItem, relLoc.x, relLoc.z)) {
             towers.add(tower);
             grid.add(towerItem, relLoc.x, relLoc.z);
             tower.computeAccessiblePathIndices(relLoc.x, relLoc.z, grid);

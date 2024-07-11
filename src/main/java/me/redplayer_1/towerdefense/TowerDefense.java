@@ -2,6 +2,7 @@ package me.redplayer_1.towerdefense;
 
 import me.redplayer_1.towerdefense.Command.LayoutCommand;
 import me.redplayer_1.towerdefense.Command.PlotCommand;
+import me.redplayer_1.towerdefense.Command.ShopCommand;
 import me.redplayer_1.towerdefense.Command.Tower.TowerCommand;
 import me.redplayer_1.towerdefense.Geometry.MeshEditor;
 import me.redplayer_1.towerdefense.Plot.Layout.Layout;
@@ -52,6 +53,7 @@ public final class TowerDefense extends JavaPlugin {
         commandMap.register("layout", new LayoutCommand());
         commandMap.register("plot", new PlotCommand());
         commandMap.register("tower", new TowerCommand());
+        commandMap.register("shop", new ShopCommand());
 
         // Listeners
         PluginManager pluginManager = getServer().getPluginManager();

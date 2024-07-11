@@ -11,6 +11,8 @@ import org.bukkit.Particle;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedList;
@@ -53,6 +55,15 @@ public final class Towers {
                 template.getParticlePoint(), template.getRange(), template.getDamage(), template.getCost(),
                 template.getTargets(), template.getAttackDelay()
         );
+    }
+
+    /**
+     * @param item the item of the tower to get
+     * @return the item's tower, or null if it doesn't exist
+     */
+    public static @Nullable Tower get(ItemStack item) {
+        String id = item.getItemMeta().getPersistentDataContainer().get(Tower.ID_KEY, PersistentDataType.STRING);
+        return get(id);
     }
 
     /**
