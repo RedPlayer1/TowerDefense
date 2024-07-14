@@ -8,11 +8,15 @@ import com.github.stefvanschie.inventoryframework.pane.Pane;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
 import me.redplayer_1.towerdefense.Plot.Tower.Towers;
 import me.redplayer_1.towerdefense.TDPlayer;
+import me.redplayer_1.towerdefense.Util.ItemUtils;
 import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.List;
 
 public class ShopMenu {
     private static ChestGui gui;
@@ -34,7 +38,7 @@ public class ShopMenu {
         gui.setOnTopClick(event -> event.setCancelled(true));
         // add tower items
         PaginatedPane pages = new PaginatedPane(0, 0, 9, 5);
-        pages.populateWithGuiItems(Towers.getTowers().stream().map(t -> new GuiItem(t.getItem(), (event) -> {
+        pages.populateWithGuiItems(Towers.getTowers().stream().map(t -> new GuiItem(addShopLore(t.getItem().clone(), t.getCost()), (event) -> {
             event.setCancelled(true);
             if (event.getWhoClicked() instanceof Player p) {
                 TDPlayer tdPlayer = TDPlayer.of(p);
@@ -55,14 +59,13 @@ public class ShopMenu {
 
         // add menu buttons (https://github.com/stefvanschie/IF/wiki/Shop)
         OutlinePane background = new OutlinePane(0, 5, 9, 1);
-        background.addItem(new GuiItem(new ItemStack(Material.BLACK_STAINED_GLASS_PANE)));
+        background.addItem(new GuiItem(ItemUtils.create("", Material.BLACK_STAINED_GLASS_PANE)));
         background.setRepeat(true);
         background.setPriority(Pane.Priority.LOWEST);
-
         gui.addPane(background);
 
         StaticPane navigation = new StaticPane(0, 5, 9, 1);
-        navigation.addItem(new GuiItem(new ItemStack(Material.RED_WOOL), event -> {
+        navigation.addItem(new GuiItem(ItemUtils.create("Previous Page", Material.RED_WOOL), event -> {
             if (pages.getPage() > 0) {
                 pages.setPage(pages.getPage() - 1);
 
@@ -70,7 +73,7 @@ public class ShopMenu {
             }
         }), 0, 0);
 
-        navigation.addItem(new GuiItem(new ItemStack(Material.GREEN_WOOL), event -> {
+        navigation.addItem(new GuiItem(ItemUtils.create("Next Page", Material.GREEN_WOOL), event -> {
             if (pages.getPage() < pages.getPages() - 1) {
                 pages.setPage(pages.getPage() + 1);
 
@@ -82,5 +85,14 @@ public class ShopMenu {
                 event.getWhoClicked().closeInventory()), 4, 0);
 
         gui.addPane(navigation);
+    }
+
+    private static ItemStack addShopLore(ItemStack input, int cost) {
+        ItemMeta meta = input.getItemMeta();
+        meta.lore(List.of(MessageUtils.asMiniMessage(
+                "<red>Costs </red><yellow><u>" + cost + "</u></yellow> <gold>coins<gold>")
+        ));
+        input.setItemMeta(meta);
+        return input;
     }
 }

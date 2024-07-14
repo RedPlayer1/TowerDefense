@@ -8,6 +8,7 @@ import java.util.Arrays;
 
 public class ItemUtils {
     // TODO: player head creation
+    private ItemUtils() { }
 
     public static ItemStack create(String name, Material material, String... lore) {
         ItemStack item = new ItemStack(material);

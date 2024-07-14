@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
 public class LocationUtils {
+    private LocationUtils() { }
     /**
      * Serializes this location into values within a new child section
      * @param location the location to serialize (only worldUUID, x, y, and z are included)

@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class MessageUtils {
     private static final MiniMessage MMSG = MiniMessage.miniMessage();
+    private MessageUtils() { }
 
     /**
      * Creates a help entry string (with MiniMessage components)
