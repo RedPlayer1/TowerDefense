@@ -45,20 +45,19 @@ public final class Towers {
         Tower template = null;
         for (Tower tower : towers) {
             if (tower.name.equals(name)) {
-                template = tower;
+                template = new Tower(
+                        name, tower.getItem(), new BlockMesh(tower.getMesh()), tower.getParticle(),
+                        tower.getParticlePoint(), tower.getRange(), tower.getDamage(),
+                        tower.getCost(), tower.getTargets(), tower.getAttackDelay()
+                );
                 break;
             }
         }
-        if (template == null) return null;
-        return new Tower(
-                name, template.getItem(), new BlockMesh(template.getMesh()), template.getParticle(),
-                template.getParticlePoint(), template.getRange(), template.getDamage(), template.getCost(),
-                template.getTargets(), template.getAttackDelay()
-        );
+        return template;
     }
 
     /**
-     * @param item the item of the tower to get
+     * @param item the item containing the id of the tower to get
      * @return the item's tower, or null if it doesn't exist
      */
     public static @Nullable Tower get(ItemStack item) {
