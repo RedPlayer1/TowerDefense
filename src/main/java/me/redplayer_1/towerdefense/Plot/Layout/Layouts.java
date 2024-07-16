@@ -28,6 +28,7 @@ public final class Layouts {
             if (layout.getName().equals(name)) {
                 BlockMesh mesh = new BlockMesh(layout.getMesh());
                 mesh.place(bottomLeft);
+                MessageUtils.logConsole("LAYOUTS CREATE -> wave #" + wave, LogLevel.DEBUG);
                 return new Layout(name, layout.getStartLocation(), mesh, layout.getPath(), wave);
             }
         }

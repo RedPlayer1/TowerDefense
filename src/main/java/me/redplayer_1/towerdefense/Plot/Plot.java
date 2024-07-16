@@ -8,6 +8,7 @@ import me.redplayer_1.towerdefense.Plot.Layout.Layout;
 import me.redplayer_1.towerdefense.Plot.Layout.Layouts;
 import me.redplayer_1.towerdefense.Plot.Tower.Tower;
 import me.redplayer_1.towerdefense.Plot.Tower.Towers;
+import me.redplayer_1.towerdefense.TowerDefense;
 import me.redplayer_1.towerdefense.Util.LocationUtils;
 import me.redplayer_1.towerdefense.Util.LogLevel;
 import me.redplayer_1.towerdefense.Util.MessageUtils;
@@ -208,9 +209,16 @@ public class Plot {
                     String[] coords = locStr.split(",");
                     if (coords.length == 2) {
                         try {
-                            if (!plot.layout.placeTower(tower, Integer.parseInt(coords[0]), Integer.parseInt(coords[1]))) {
-                                MessageUtils.logConsole("Couldn't place tower from plot config", LogLevel.ERROR);
-                            }
+                            Location towerLocation = plot.layout.getMesh().getBottomLeft().add(Integer.parseInt(coords[0]), 1, -Integer.parseInt(coords[1]));
+//                            if (!plot.layout.placeTower(tower, Integer.parseInt(coords[0]), Integer.parseInt(coords[1]))) {
+//                                MessageUtils.logConsole("Couldn't place tower from plot config", LogLevel.ERROR);
+//                            }
+                            Bukkit.getScheduler().runTaskLater(TowerDefense.INSTANCE, () -> {
+                                if (!plot.layout.placeTower(tower, towerLocation)) {
+                                    MessageUtils.logConsole("Couldn't place tower from plot config", LogLevel.ERROR);
+                                }
+                            }, 80);
+
                         } catch (NumberFormatException e) {
                             MessageUtils.logConsole(
                                     "Coordinates for tower in plot config aren't valid integers",

@@ -101,6 +101,7 @@ public class Tower {
             if (e.isAlive() && accessiblePathIndices.contains(e.getPathIndex())) {
                 attack(e, owner, particleSpacing, true);
                 attacked++;
+                MessageUtils.logConsole("[" + System.currentTimeMillis() + "]" + " TOWER ATTACKED", LogLevel.NOTICE);
             }
         }
     }
@@ -175,8 +176,10 @@ public class Tower {
         y += particlePoint.z;
 
         grid.forItemArea(x - range, y - range, range * 2, range * 2, (item) -> {
+            long prefix = System.currentTimeMillis();
             if (item instanceof Layout.PathItem pathItem) {
                 accessiblePathIndices.add(pathItem.index);
+                MessageUtils.logConsole(prefix + " || Accessible PI: " + pathItem.index, LogLevel.NOTICE);
             }
             return item;
         });

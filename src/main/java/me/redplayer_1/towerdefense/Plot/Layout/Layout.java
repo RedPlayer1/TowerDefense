@@ -56,6 +56,7 @@ public class Layout {
         grid = new Grid(SIZE, SIZE);
         this.path = path;
         addPathToGrid();
+        MessageUtils.logConsole("LAYOUT CREATE -> got wave #" + wave, LogLevel.DEBUG);
         waveManager = new WaveManager(wave);
         towers = new LinkedList<>();
         enemies = new LinkedList<>();
@@ -81,6 +82,7 @@ public class Layout {
 
     public void start(TDPlayer parent) {
         AtomicInteger killed = new AtomicInteger();
+        MessageUtils.log(parent.getPlayer(), "Started spawner @ wave #" + waveManager.getWave() + " & w/ " + towers.size() + " towers", LogLevel.DEBUG);
         spawner = Bukkit.getScheduler().runTaskTimer(TowerDefense.INSTANCE, () -> {
             if (enemies.size() < waveManager.getEnemyCount()) {
                 Enemy enemy = spawnEnemy();
@@ -91,6 +93,7 @@ public class Layout {
                         killAllEnemies(false);
                         killed.set(0);
                         MessageUtils.log(parent.getPlayer(), "Wave failed! Sent back to wave " + waveManager.getWave(), LogLevel.NOTICE);
+                        parent.updateScoreboard();
                     } else {
                         killed.incrementAndGet();
                         parent.giveMoney(waveManager.getEnemyCoinYield());
@@ -102,6 +105,7 @@ public class Layout {
                 killAllEnemies(true);
                 killed.set(0);
                 waveManager.next();
+                parent.updateScoreboard();
             }
         }, 0, 20);
 
@@ -122,9 +126,11 @@ public class Layout {
     public void stop() {
         if (spawner != null) {
             spawner.cancel();
+            spawner = null;
         }
         if (attacker != null) {
             attacker.cancel();
+            attacker = null;
         }
         killAllEnemies(false);
     }
@@ -172,6 +178,7 @@ public class Layout {
         for (Tower tower : towers) {
             tower.getMesh().destroy();
         }
+        killAllEnemies(false);
     }
 
     /**
@@ -189,6 +196,7 @@ public class Layout {
             grid.add(towerItem, relLoc.x, relLoc.z);
             tower.computeAccessiblePathIndices(relLoc.x, relLoc.z, grid);
             towerMesh.place(location);
+            MessageUtils.logConsole("tower placed @ " + MessageUtils.locationToString(location) + ", " + relLoc, LogLevel.DEBUG);
             return true;
         }
         return false;

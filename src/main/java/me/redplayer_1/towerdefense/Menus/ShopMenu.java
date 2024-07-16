@@ -65,7 +65,7 @@ public class ShopMenu {
         gui.addPane(background);
 
         StaticPane navigation = new StaticPane(0, 5, 9, 1);
-        navigation.addItem(new GuiItem(ItemUtils.create("Previous Page", Material.RED_WOOL), event -> {
+        navigation.addItem(new GuiItem(ItemUtils.create("<red>Previous Page", Material.RED_WOOL), event -> {
             if (pages.getPage() > 0) {
                 pages.setPage(pages.getPage() - 1);
 
@@ -73,7 +73,7 @@ public class ShopMenu {
             }
         }), 0, 0);
 
-        navigation.addItem(new GuiItem(ItemUtils.create("Next Page", Material.GREEN_WOOL), event -> {
+        navigation.addItem(new GuiItem(ItemUtils.create("<green>Next Page", Material.GREEN_WOOL), event -> {
             if (pages.getPage() < pages.getPages() - 1) {
                 pages.setPage(pages.getPage() + 1);
 
@@ -81,7 +81,7 @@ public class ShopMenu {
             }
         }), 8, 0);
 
-        navigation.addItem(new GuiItem(new ItemStack(Material.BARRIER), event ->
+        navigation.addItem(new GuiItem(ItemUtils.create("<gold>Close", Material.BARRIER), event ->
                 event.getWhoClicked().closeInventory()), 4, 0);
 
         gui.addPane(navigation);

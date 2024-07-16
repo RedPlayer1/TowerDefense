@@ -10,6 +10,13 @@ public class ItemUtils {
     // TODO: player head creation
     private ItemUtils() { }
 
+    /**
+     * Creates a new ItemStack with a count of 1. Both the name and lore of the item are parsed as MiniMessages.
+     * @param name the name of the item
+     * @param material the type of item
+     * @param lore the lore of the item
+     * @return the new item
+     */
     public static ItemStack create(String name, Material material, String... lore) {
         ItemStack item = new ItemStack(material);
         item.editMeta(meta -> {
